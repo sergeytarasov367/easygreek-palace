@@ -1,0 +1,1857 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<title>Дворец памяти · EasyGreek</title>
+<style>
+  :root {
+    --bg: #0f1720; --panel: #17212c; --panel2: #1e2a37; --text: #e8edf2; --muted: #9aa8b6;
+    --line: #2b3a4a; --accent: #58c9ee; --ok: #87c392; --warn: #f2cd5c;
+    --m: #72c2b5; --f: #dc8db8; --n: #87c392; --ending: #a593dc;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f6f8; --panel: #ffffff; --panel2: #eef2f5; --text: #17212c; --muted: #5b6b7a;
+    --line: #d5dde5; --accent: #1a8fb8; --ok: #2f8a45; --warn: #a57a00;
+    --m: #1f8a7a; --f: #b84d86; --n: #3f8a4f; --ending: #6a55b8;
+  }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden;
+    -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #top { position: fixed; left: 0; right: 0; top: 0; display: flex; gap: 8px; align-items: center;
+    padding: max(10px, env(safe-area-inset-top)) 12px 10px; background: linear-gradient(var(--bg), transparent); z-index: 5; }
+  #top h1 { font-size: 15px; font-weight: 650; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .seg { display: flex; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px;
+    padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+  .seg button.on { background: var(--panel2); color: var(--text); font-weight: 600; }
+  #score { font-size: 13px; color: var(--muted); padding: 0 4px; display: none; white-space: nowrap; }
+  #labels { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+  .lab { position: absolute; transform: translate(-50%, -100%); padding: 3px 8px; border-radius: 8px;
+    background: rgba(15, 23, 32, .78); color: #e8edf2; font-size: 15px; white-space: nowrap; font-weight: 600;
+    border: 1px solid rgba(255,255,255,.12); }
+  .lab.q { font-size: 16px; min-width: 18px; text-align: center; }
+  .lab.done { opacity: .55; }
+  .lab.sel { background: rgba(88, 201, 238, .9); color: #0b1218; border-color: #58c9ee; }
+  @media (max-width: 520px) { #top h1 { display: none; } .seg button { padding-left: 11px; padding-right: 11px; } }
+  #quest { position: fixed; left: 50%; top: calc(max(10px, env(safe-area-inset-top)) + 56px); transform: translateX(-50%);   /* под шапкой и на iPhone с вырезом */ width: min(560px, calc(100% - 24px)); box-sizing: border-box;
+    background: rgba(23,33,44,.93); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; z-index: 4; display: none; }
+  body.quest #quest { display: block; }
+  body.quest .lab:not(.char) { display: none !important; }
+  #quest .who { font-size: 12px; color: var(--muted); }
+  #quest .gr { font-size: 19px; font-weight: 600; margin: 3px 0 1px; }
+  #quest .tr { font-size: 14px; color: var(--muted); }
+  #quest .bad { margin-top: 6px; font-size: 16px; color: #f0a0a0; }
+  #quest .good { margin-top: 6px; font-size: 16px; color: #9fd8a8; }
+  #quest .row { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+  #quest .btn { padding: 6px 11px; font-size: 13px; }
+  #quest .hand { margin-left: auto; font-size: 14px; color: var(--muted); }
+  #quest .hand b { color: var(--text); }
+  #toast { position: fixed; left: 50%; top: 46%; transform: translate(-50%, -50%); background: rgba(23,33,44,.94); border: 1px solid var(--line);
+    border-radius: 12px; padding: 8px 14px; z-index: 6; display: none; pointer-events: none; font-size: 15px; }
+  a.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+  .lab.char { background: rgba(88, 201, 238, .18); border-color: rgba(88,201,238,.5); }
+  #card { position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+    width: min(520px, calc(100% - 24px)); box-sizing: border-box; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 18px; padding: 16px 16px 14px; z-index: 6; box-shadow: 0 10px 40px rgba(0,0,0,.45); display: none; }
+  #card .x { position: absolute; right: 8px; top: 6px; border: 0; background: none; color: var(--muted); font-size: 22px; cursor: pointer; padding: 6px 10px; }
+  .mark { font-size: 13px; font-weight: 600; letter-spacing: .02em; text-align: center; min-height: 16px; }
+  .word { font-size: 34px; font-weight: 650; text-align: center; margin: 2px 0 2px; line-height: 1.15; }
+  .ru { text-align: center; color: var(--muted); font-size: 16px; margin-bottom: 10px; }
+  .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .btn { border: 1px solid var(--line); background: var(--panel2); color: var(--text); font: inherit; font-size: 15px;
+    padding: 10px 14px; border-radius: 12px; cursor: pointer; }
+  .btn.primary { background: var(--accent); color: #0f1720; border-color: transparent; font-weight: 650; }
+  .btn.ok { border-color: var(--ok); color: var(--ok); }
+  .course { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 14px; }
+  .course .cap { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  .course .gr { font-size: 17px; font-weight: 600; margin-bottom: 2px; }
+  .course .tr { color: var(--muted); margin-bottom: 8px; }
+  .who { text-align: center; color: var(--accent); font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .say { font-size: 22px; font-weight: 600; text-align: center; line-height: 1.3; margin: 2px 0 4px; }
+  #hint { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(400px, calc(100% - 32px));
+    box-sizing: border-box; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; z-index: 7;
+    box-shadow: 0 10px 40px rgba(0,0,0,.45); }
+  #hint h2 { margin: 0 0 8px; font-size: 18px; }
+  #hint p { margin: 6px 0; color: var(--muted); font-size: 15px; line-height: 1.4; }
+  #hint .btn { width: 100%; margin-top: 12px; }
+  #hint { max-height: calc(100% - 20px); overflow-y: auto; }   /* 12.11: на низком экране (360×640) «Войти» уходил за край */
+  @media (max-height: 700px) { #hint { padding: 14px 16px; } #hint h2 { font-size: 17px; margin-bottom: 4px; } #hint p { font-size: 14px; margin: 4px 0; line-height: 1.32; } }
+  #done { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(380px, calc(100% - 32px));
+    box-sizing: border-box; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; z-index: 7; display: none; text-align: center; }
+  #done .big { font-size: 40px; font-weight: 700; margin: 6px 0; }
+  /* джойстик (касания, 11.11): в покое — бледный круг в левом нижнем углу; палец в левой трети — круг под пальцем */
+  #safe { position: fixed; inset: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    visibility: hidden; pointer-events: none; z-index: -1; }
+  #joy { display: none; }
+  body.touch #joy, body.joyon #joy { display: block; }
+  #joy.hide { display: none !important; }
+  #joy .base, #joy .knob { position: fixed; left: 0; top: 0; border-radius: 50%; pointer-events: none; z-index: 4; box-sizing: border-box; will-change: transform; }
+  #joy .base { width: 116px; height: 116px; margin: -58px 0 0 -58px; border: 2px solid rgba(255,255,255,.34); background: rgba(15,23,32,.24); }
+  #joy .knob { width: 52px; height: 52px; margin: -26px 0 0 -26px; background: rgba(232,237,242,.45); border: 1px solid rgba(255,255,255,.6); }
+  #joy:not(.on) .base, #joy:not(.on) .knob { opacity: .6; }
+  #joy.on .knob { background: rgba(88,201,238,.8); border-color: #58c9ee; }
+  @media (min-width: 700px) and (min-height: 700px) {
+    #joy .base { width: 136px; height: 136px; margin: -68px 0 0 -68px; } #joy .knob { width: 60px; height: 60px; margin: -30px 0 0 -30px; } }
+  .tdot { position: fixed; left: 0; top: 0; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: rgba(255,255,255,.3);
+    border: 2px solid rgba(255,255,255,.85); z-index: 9; pointer-events: none; transition: opacity .25s; }
+  #cross { position: fixed; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: rgba(255,255,255,.9);
+    box-shadow: 0 0 0 2px rgba(0,0,0,.35); z-index: 3; display: none; pointer-events: none; transition: all .12s; }
+  body.locked #cross { display: block; }
+  #cross.on { width: 16px; height: 16px; margin: -8px 0 0 -8px; background: #58c9ee; }
+  .lab.aim { outline: 2px solid #58c9ee; outline-offset: 1px; }
+  #keysHelp { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); font-size: 12px; color: var(--muted); background: rgba(15,23,32,.55);
+    padding: 3px 10px; border-radius: 8px; z-index: 3; display: none; pointer-events: none; white-space: nowrap; }
+  #lockTip { position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); background: rgba(23,33,44,.9); border: 1px solid var(--line);
+    border-radius: 12px; padding: 8px 14px; font-size: 14px; color: var(--text); z-index: 3; display: none; pointer-events: none; white-space: nowrap; }
+  .foot { position: fixed; left: 12px; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 3; font-size: 11px; color: var(--muted); opacity: .8; }
+  .foot a { color: var(--muted); }
+  #doorBtn { position: fixed; left: 50%; bottom: max(84px, calc(env(safe-area-inset-bottom) + 70px)); transform: translateX(-50%); z-index: 4; display: none; }
+  /* касания: левый нижний угол — джойстик; дверь — справа под правый большой палец, подпись «прототип» — туда же, ниже */
+  body.touch .foot { left: auto; right: max(12px, env(safe-area-inset-right)); }
+  body.touch #doorBtn { left: auto; right: max(16px, calc(env(safe-area-inset-right) + 8px)); transform: none; bottom: max(36px, calc(env(safe-area-inset-bottom) + 26px)); }
+  #fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 8; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<div id="top">
+  <h1><span class="long">Дворец памяти · </span><span id="roomName">гостиная</span></h1>
+  <span id="score"></span>
+  <div class="seg" role="tablist">
+    <button id="mLook" class="on" role="tab">Смотреть</button>
+    <button id="mRecall" role="tab">Вспомнить</button>
+    <button id="mQuest" role="tab">Квест</button>
+  </div>
+</div>
+<div id="quest"></div><div id="toast"></div>
+<div id="cross"></div><div id="lockTip">Нажми — смотреть мышью · Esc — курсор</div><div id="keysHelp"></div>
+<div id="joy" class="hide" aria-hidden="true"><div class="base"></div><div class="knob"></div></div><div id="safe"></div>
+<div class="foot">прототип · <a href="https://easygreek.app/greek/propis/">пропись</a></div>
+<button id="doorBtn" class="btn primary"></button><div id="fade"></div>
+
+<div id="hint">
+  <h2>Дворец памяти</h2>
+  <p>Это комната, где каждая вещь — греческое слово. Сначала походи и посмотри: нажми на предмет — увидишь слово и услышишь его.</p>
+  <p>Люди в комнате говорят фразы из прописи — нажми на них.</p>
+  <p>«Квест»: Элени просит по-гречески что-то принести — найди, возьми и отдай ей.</p>
+  <p>Через коридор — кухня: там κύριος Νίκος готовит и просит продукты — с числами, сколько штук.</p>
+  <p>По другую сторону коридора — спальня: Анна и Йоргос ищут свои вещи — чьё? μου, σου, του, της.</p>
+  <p>Из кухни — двор, за калиткой — улица и море: Петрос зовёт «Πάμε στη στάση!» — иди туда (στον, στη, στο).</p>
+  <p>Потом включи «Вспомнить»: подписи исчезнут, пройди по комнате и вспомни слово на каждом месте.</p>
+  <p id="howto">Слева внизу — джойстик: веди пальцем, куда идти. Справа тяни — оглядеться. В двери входи пешком — дом один, без переходов. Нажми на вещь или человека — подойдёшь и откроешь, на пол — пройдёшь туда.</p>
+  <button class="btn primary" id="go">Войти</button>
+</div>
+<div id="card"></div>
+<div id="done"><div>Вспомнил</div><div class="big" id="doneN"></div><div class="row" style="margin-top:10px">
+  <button class="btn primary" id="again">Ещё раз</button><button class="btn" id="toLook">Посмотреть слова</button></div></div>
+
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// ---------- содержимое: слова проверены content/verify_greek.py (0 замечаний), род — kaikki ----------
+const COURSE_AUDIO = 'https://easygreek.app/greek/propis/audio/';
+const WORDS = [
+  // art, stem, ending, ru, gender, slug, course line (id, gr, ru) — строки и их mp3 уже есть в курсе
+  { a: 'ο', s: 'καναπ', e: 'ές', ru: 'диван', g: 'm', id: 'kanapes' },
+  { a: 'ο', s: 'καθρέφτ', e: 'ης', ru: 'зеркало', g: 'm', id: 'kathreftis' },
+  { a: 'ο', s: 'υπολογιστ', e: 'ής', ru: 'компьютер', g: 'm', id: 'ypologistis' },
+  { a: 'η', s: 'καρέκλ', e: 'α', ru: 'стул', g: 'f', id: 'karekla' },
+  { a: 'η', s: 'πόρτ', e: 'α', ru: 'дверь', g: 'f', id: 'porta',
+    line: { id: 'pad-070', gr: 'Η πόρτα του γραφείου είναι ανοιχτή.', ru: '' } },
+  { a: 'η', s: 'λάμπ', e: 'α', ru: 'лампа', g: 'f', id: 'lampa' },
+  { a: 'η', s: 'τηλεόρασ', e: 'η', ru: 'телевизор', g: 'f', id: 'tileorasi',
+    line: { id: 'hab-vlepei', gr: 'Η Μαρία συνήθως βλέπει τηλεόραση.', ru: '' } },
+  { a: 'η', s: 'ντουλάπ', e: 'α', ru: 'шкаф', g: 'f', id: 'ntoylapa',
+    line: { id: 'domatia-ntoulapa-balkoni', gr: 'Όλα τα δωμάτια έχουν ντουλάπα και μπαλκόνι.', ru: '' } },
+  { a: 'το', s: 'τραπέζ', e: 'ι', ru: 'стол', g: 'n', id: 'trapezi' },
+  { a: 'το', s: 'παράθυρ', e: 'ο', ru: 'окно', g: 'n', id: 'parathyro',
+    line: { id: 'kleise-parathyro', gr: 'Κλείσε το παράθυρο, σε παρακαλώ.', ru: '' } },
+  { a: 'το', s: 'ψυγεί', e: 'ο', ru: 'холодильник', g: 'n', id: 'psygeio',
+    line: { id: 'psygeio-kai-fournos', gr: 'ψυγείο και φούρνος', ru: '' } },
+  { a: 'το', s: 'βιβλί', e: 'ο', ru: 'книга', g: 'n', id: 'vivlio',
+    line: { id: 'vivlio-vivlia', gr: 'το βιβλίο τα βιβλία', ru: '' } },
+  { a: 'το', s: 'ρολό', e: 'ι', ru: 'часы', g: 'n', id: 'roloi' },
+  { a: 'το', s: 'φυτ', e: 'ό', ru: 'растение', g: 'n', id: 'fyto' },
+  // 10.11: предметы для квеста (озвучка — gen_audio athina; строки курса — где есть)
+  { a: 'η', s: 'τσάντ', e: 'α', ru: 'сумка', g: 'f', id: 'tsanta',
+    line: { id: 'dose-mou', gr: 'Δώσε μου την τσάντα.', ru: '' } },
+  { a: 'ο', s: 'καφ', e: 'ές', ru: 'кофе', g: 'm', id: 'kafes',
+    line: { id: 'ela-kafe', gr: 'Έλα στο σπίτι για έναν καφέ.', ru: '' } },
+  { a: 'η', s: 'ομπρέλ', e: 'α', ru: 'зонт', g: 'f', id: 'omprela',
+    line: { id: 'kratao-kainouria-omprela', gr: 'Κρατάω την καινούρια μου ομπρέλα.', ru: '' } },
+  { a: 'το', s: 'κρασ', e: 'ί', ru: 'вино', g: 'n', id: 'krasi',
+    line: { id: 'kokkino-krasi', gr: 'κόκκινο κρασί', ru: '' } },
+  { a: 'η', s: 'μπίρ', e: 'α', ru: 'пиво', g: 'f', id: 'mpira' },
+  { a: 'το', s: 'κλειδ', e: 'ί', ru: 'ключ', g: 'n', id: 'kleidi',
+    line: { id: 'kleidia-grafeion', gr: 'Τα κλειδιά των γραφείων είναι εδώ.', ru: '' } },
+  // 10.11: кухня (kitchen/texts.txt — verify_greek 0 замечаний; род и мн. ч. — kaikki; звук kitchen/audio, gen_kitchen_audio.py)
+  { a: 'ο', s: 'φούρν', e: 'ος', ru: 'духовка', g: 'm', id: 'fournos', room: 'kitchen',
+    line: { id: 'den-chrisimopoioume-fourno', gr: 'Δεν χρησιμοποιούμε τον φούρνο.', ru: '' } },
+  { a: 'ο', s: 'νεροχύτ', e: 'ης', ru: 'раковина', g: 'm', id: 'nerochytis', room: 'kitchen' },
+  { a: 'το', s: 'ντουλάπ', e: 'ι', ru: 'шкафчик', g: 'n', id: 'ntoulapi', room: 'kitchen' },
+  { a: 'η', s: 'κατσαρόλ', e: 'α', ru: 'кастрюля', g: 'f', id: 'katsarola', room: 'kitchen' },
+  { a: 'το', s: 'τηγάν', e: 'ι', ru: 'сковорода', g: 'n', id: 'tigani', room: 'kitchen' },
+  { a: 'το', s: 'πιάτ', e: 'ο', ru: 'тарелка', g: 'n', id: 'piato', room: 'kitchen' },
+  { a: 'το', s: 'ποτήρ', e: 'ι', ru: 'стакан', g: 'n', id: 'potiri', room: 'kitchen' },
+  { a: 'το', s: 'μαχαίρ', e: 'ι', ru: 'нож', g: 'n', id: 'machairi', room: 'kitchen' },
+  { a: 'το', s: 'πιρούν', e: 'ι', ru: 'вилка', g: 'n', id: 'pirouni', room: 'kitchen' },
+  { a: 'το', s: 'κουτάλ', e: 'ι', ru: 'ложка', g: 'n', id: 'koutali', room: 'kitchen' },
+  { a: 'το', s: 'ψωμ', e: 'ί', ru: 'хлеб', g: 'n', id: 'psomi', room: 'kitchen',
+    line: { id: 'thelo-ena-psomi', gr: 'Θέλω ένα ψωμί.', ru: '' } },
+  { a: 'το', s: 'τυρ', e: 'ί', ru: 'сыр', g: 'n', id: 'tyri', room: 'kitchen' },
+  { a: 'η', s: 'ντομάτ', e: 'α', ru: 'помидор', g: 'f', id: 'ntomata', room: 'kitchen' },
+  { a: 'το', s: 'αυγ', e: 'ό', ru: 'яйцо', g: 'n', id: 'avgo', room: 'kitchen' },
+  { a: 'το', s: 'λεμόν', e: 'ι', ru: 'лимон', g: 'n', id: 'lemoni', room: 'kitchen' },
+  { a: 'το', s: 'μήλ', e: 'ο', ru: 'яблоко', g: 'n', id: 'milo', room: 'kitchen' },
+  { a: 'το', s: 'γάλ', e: 'α', ru: 'молоко', g: 'n', id: 'gala', room: 'kitchen',
+    line: { id: 'mono-gala-kai-meli', gr: 'Χρησιμοποιούμε μόνο γάλα και μέλι.', ru: '' } },
+  { a: 'το', s: 'ψάρ', e: 'ι', ru: 'рыба', g: 'n', id: 'psari', room: 'kitchen' },
+  { a: 'η', s: 'σαλάτ', e: 'α', ru: 'салат', g: 'f', id: 'salata', room: 'kitchen',
+    line: { id: 'choriatiki-salata', gr: 'χωριάτικη σαλάτα', ru: '' } },
+  { a: 'η', s: 'μπανάν', e: 'α', ru: 'банан', g: 'f', id: 'banana', room: 'kitchen' },
+  // 10.11: двор (yard/texts.txt — verify_greek 0 замечаний; род, мн. ч., τον κάκτο — kaikki; μεγάλος/μικρός — строки курса megalos-3, mikros-3;
+  // adj — прилагательное перед словом, окончание цветом рода слова (узор 7.1); звук yard/audio, gen_yard_audio.py)
+  { a: 'το', s: 'δέντρ', e: 'ο', ru: 'дерево', g: 'n', id: 'dentro', room: 'yard' },
+  { a: 'ο', s: 'φοίνικ', e: 'ας', ru: 'пальма', g: 'm', id: 'foinikas', room: 'yard' },
+  { a: 'ο', s: 'φράχτ', e: 'ης', ru: 'забор', g: 'm', id: 'fraktis', room: 'yard' },
+  { a: 'το', s: 'χορτάρ', e: 'ι', ru: 'трава', g: 'n', id: 'chortari', room: 'yard' },
+  { a: 'η', s: 'πέτρ', e: 'α', ru: 'камень', g: 'f', id: 'petra', room: 'yard' },
+  { a: 'η', s: 'γλάστρ', e: 'α', ru: 'цветочный горшок', g: 'f', id: 'glastra', room: 'yard' },
+  { a: 'το', s: 'μανιτάρ', e: 'ι', ru: 'гриб', g: 'n', id: 'manitari', room: 'yard' },
+  { a: 'το', s: 'καρότ', e: 'ο', ru: 'морковь', g: 'n', id: 'karoto', room: 'yard' },
+  { a: 'το', s: 'καλαμπόκ', e: 'ι', ru: 'кукуруза', g: 'n', id: 'kalampoki', room: 'yard' },
+  { a: 'ο', s: 'ήλι', e: 'ος', ru: 'солнце', g: 'm', id: 'ilios', room: 'yard' },
+  { a: 'το', s: 'σύννεφ', e: 'ο', ru: 'облако', g: 'n', id: 'synnefo', room: 'yard' },
+  { a: 'το', adj: ['κόκκιν', 'ο'], s: 'λουλούδ', e: 'ι', ru: 'красный цветок', g: 'n', id: 'louloudi-kokkino', room: 'yard' },
+  { a: 'το', adj: ['κίτριν', 'ο'], s: 'λουλούδ', e: 'ι', ru: 'жёлтый цветок', g: 'n', id: 'louloudi-kitrino', room: 'yard' },
+  { a: 'το', adj: ['μωβ', ''], s: 'λουλούδ', e: 'ι', ru: 'фиолетовый цветок', g: 'n', id: 'louloudi-mov', room: 'yard' },
+  { a: 'η', adj: ['μεγάλ', 'η'], s: 'κολοκύθ', e: 'α', ru: 'большая тыква', g: 'f', id: 'kolokytha-megali', room: 'yard' },
+  { a: 'η', adj: ['μικρ', 'ή'], s: 'κολοκύθ', e: 'α', ru: 'маленькая тыква', g: 'f', id: 'kolokytha-mikri', room: 'yard' },
+  { a: 'ο', adj: ['μεγάλ', 'ος'], s: 'κάκτ', e: 'ος', ru: 'большой кактус', g: 'm', id: 'kaktos-megalos', room: 'yard' },
+  { a: 'ο', adj: ['μικρ', 'ός'], s: 'κάκτ', e: 'ος', ru: 'маленький кактус', g: 'm', id: 'kaktos-mikros', room: 'yard' },
+  // 11.11: спальня (bedroom/texts.txt — verify_greek 0 замечаний, hunspell el_GR 0; род — kaikki; звук bedroom/audio, gen_bedroom_audio.py)
+  // pos — «чей» после слова (узор 9.4), с точки зрения игрока: της — вещь Анны, του — Йоргоса, μου — моя; pl — мн. ч. (τα γυαλιά)
+  { a: 'το', s: 'κρεβάτ', e: 'ι', ru: 'кровать', g: 'n', id: 'krevati', room: 'bedroom' },
+  { a: 'το', s: 'κομοδίν', e: 'ο', ru: 'тумбочка', g: 'n', id: 'komodino', room: 'bedroom' },
+  { a: 'το', s: 'μαξιλάρ', e: 'ι', ru: 'подушка', g: 'n', id: 'maxilari', room: 'bedroom' },
+  { a: 'η', s: 'κουβέρτ', e: 'α', ru: 'одеяло', g: 'f', id: 'kouverta', room: 'bedroom' },
+  { a: 'το', s: 'χαλ', e: 'ί', ru: 'ковёр', g: 'n', id: 'chali', room: 'bedroom' },
+  { a: 'η', s: 'κουρτίν', e: 'α', ru: 'штора', g: 'f', id: 'kourtina', room: 'bedroom' },
+  { a: 'το', s: 'ξυπνητήρ', e: 'ι', ru: 'будильник', g: 'n', id: 'xypnitiri', room: 'bedroom',
+    line: { id: 'xypnao-5', gr: 'Τώρα δεν ξυπνάω στις 5 το πρωί.', ru: '' } },
+  { a: 'το', s: 'αρκουδάκ', e: 'ι', ru: 'мишка', g: 'n', id: 'arkoudaki', room: 'bedroom' },
+  { a: 'η', s: 'κρεμάστρ', e: 'α', ru: 'вешалка', g: 'f', id: 'kremastra', room: 'bedroom' },
+  { a: 'ο', s: 'ανεμιστήρ', e: 'ας', ru: 'вентилятор', g: 'm', id: 'anemistiras', room: 'bedroom' },
+  { a: 'το', s: 'κινητ', e: 'ό', pos: 'της', ru: 'мобильник её', g: 'n', id: 'kinito-tis', room: 'bedroom',
+    line: { id: 'kinito-chalase', gr: 'Το κινητό τηλέφωνό σας χάλασε.', ru: '' } },
+  { a: 'το', s: 'κινητ', e: 'ό', pos: 'του', ru: 'мобильник его', g: 'n', id: 'kinito-tou', room: 'bedroom',
+    line: { id: 'kinito-chalase', gr: 'Το κινητό τηλέφωνό σας χάλασε.', ru: '' } },
+  { a: 'το', s: 'κινητ', e: 'ό', pos: 'μου', ru: 'мобильник мой', g: 'n', id: 'kinito-mou', room: 'bedroom',
+    line: { id: 'kinito-chalase', gr: 'Το κινητό τηλέφωνό σας χάλασε.', ru: '' } },
+  { a: 'τα', s: 'γυαλ', e: 'ιά', pos: 'της', pl: true, ru: 'очки её', g: 'n', id: 'gyalia-tis', room: 'bedroom' },
+  { a: 'τα', s: 'γυαλ', e: 'ιά', pos: 'του', pl: true, ru: 'очки его', g: 'n', id: 'gyalia-tou', room: 'bedroom' },
+  { a: 'το', s: 'πορτοφόλ', e: 'ι', pos: 'του', ru: 'кошелёк его', g: 'n', id: 'portofoli-tou', room: 'bedroom' },
+  { a: 'το', s: 'πορτοφόλ', e: 'ι', pos: 'μου', ru: 'кошелёк мой', g: 'n', id: 'portofoli-mou', room: 'bedroom' },
+  { a: 'η', s: 'γραβάτ', e: 'α', pos: 'του', ru: 'галстук его', g: 'f', id: 'gravata-tou', room: 'bedroom' },
+  // 12.11: улица и море (street/texts.txt — verify_greek --texts 0 замечаний, hunspell el_GR 0; род и мн. ч. — kaikki: η άμμος — женский на -ος;
+  // звук street/audio, gen_street_audio.py). area — место-площадь (дорога, пляж, море): касание ведёт туда
+  { a: 'το', s: 'σπίτ', e: 'ι', ru: 'дом', g: 'n', id: 'spiti', room: 'street',
+    line: { id: 'sp-pigaino', gr: 'Πηγαίνω στο σπίτι.', ru: '' } },
+  { a: 'ο', s: 'κήπ', e: 'ος', ru: 'сад', g: 'm', id: 'kipos', room: 'street',
+    line: { id: 'echete-kipo', gr: 'Έχετε κήπο στο σπίτι σας;', ru: '' } },
+  { a: 'το', s: 'μπαλκόν', e: 'ι', ru: 'балкон', g: 'n', id: 'mpalkoni', room: 'street',
+    line: { id: 'domatia-ntoulapa-balkoni', gr: 'Όλα τα δωμάτια έχουν ντουλάπα και μπαλκόνι.', ru: '' } },
+  { a: 'το', s: 'φαρμακεί', e: 'ο', ru: 'аптека', g: 'n', id: 'farmakeio', room: 'street',
+    line: { id: 'yparchei-farmakeio', gr: 'Υπάρχει φαρμακείο εδώ κοντά;', ru: '' } },
+  { a: 'η', s: 'καφετέρι', e: 'α', ru: 'кафе', g: 'f', id: 'kafeteria', room: 'street',
+    line: { id: 'kainouria-kafeteria-thalassa', gr: 'Ξέρω μια καινούρια καφετέρια δίπλα στη θάλασσα.', ru: '' } },
+  { a: 'ο', s: 'δρόμ', e: 'ος', ru: 'дорога', g: 'm', id: 'dromos', room: 'street', area: true,
+    line: { id: 'kentro-kentriko-dromo', gr: 'Μένω στο κέντρο, σε έναν κεντρικό δρόμο.', ru: '' } },
+  { a: 'το', s: 'φανάρ', e: 'ι', ru: 'светофор', g: 'n', id: 'fanari', room: 'street' },
+  { a: 'το', s: 'αυτοκίνητ', e: 'ο', ru: 'машина', g: 'n', id: 'aftokinito', room: 'street',
+    line: { id: 'pad-081', gr: 'Το αυτοκίνητο της κυρίας είναι κόκκινο.', ru: '' } },
+  { a: 'το', s: 'ταξ', e: 'ί', ru: 'такси', g: 'n', id: 'taxi', room: 'street',
+    line: { id: 'ta-taxi-perimenoun', gr: 'Τα ταξί περιμένουν έξω.', ru: '' } },
+  { a: 'το', s: 'λεωφορεί', e: 'ο', ru: 'автобус', g: 'n', id: 'leoforeio', room: 'street',
+    line: { id: 'pao-leoforeio', gr: 'Πάω με το λεωφορείο.', ru: '' } },
+  { a: 'η', s: 'στάσ', e: 'η', ru: 'остановка', g: 'f', id: 'stasi', room: 'street',
+    line: { id: 'pad-073', gr: 'Η στάση του λεωφορείου είναι εδώ.', ru: '' } },
+  { a: 'το', s: 'ποδήλατ', e: 'ο', ru: 'велосипед', g: 'n', id: 'podilato', room: 'street' },
+  { a: 'ο', s: 'σκύλ', e: 'ος', ru: 'пёс', g: 'm', id: 'skylos', room: 'street',
+    line: { id: 'my-perpatao', gr: 'Περπατάω με τον σκύλο μου.', ru: '' } },
+  { a: 'η', s: 'παραλί', e: 'α', ru: 'пляж', g: 'f', id: 'paralia', room: 'street', area: true,
+    line: { id: 'idea-anemelia', gr: 'Τα παιδιά παίζουν με ανεμελιά στην παραλία.', ru: '' } },
+  { a: 'η', s: 'θάλασσ', e: 'α', ru: 'море', g: 'f', id: 'thalassa', room: 'street', area: true,
+    line: { id: 'my-kolympao', gr: 'Κολυμπάω στη θάλασσα.', ru: '' } },
+  { a: 'η', s: 'ξαπλώστρ', e: 'α', ru: 'шезлонг', g: 'f', id: 'xaplostra', room: 'street' },
+  { a: 'η', s: 'βάρκ', e: 'α', ru: 'лодка', g: 'f', id: 'varka', room: 'street' },
+  { a: 'η', s: 'άμμ', e: 'ος', ru: 'песок', g: 'f', id: 'ammos', room: 'street' },
+];
+const PEOPLE = [
+  { id: 'examiner', name: 'Экзаменатор', line: { id: 'mageireuete-etoimo-fagito', gr: 'Μαγειρεύετε στο σπίτι ή τρώτε έτοιμο φαγητό;', ru: '' }, voice: 'nestoras' },
+  { id: 'eleni', name: 'Элени', line: { id: 'spiti-oraio', gr: 'Το σπίτι είναι ωραίο.', ru: '' }, voice: 'athina' },
+  { id: 'nikos', name: 'Никос', line: { id: 'arnaki-ston-fourno', gr: 'αρνάκι στον φούρνο', ru: '' }, voice: 'nestoras' },
+  { id: 'maria', name: 'Мария', line: { id: 'echete-kipo', gr: 'Έχετε κήπο στο σπίτι σας;', ru: '' }, voice: 'athina' },
+  { id: 'anna', name: 'Анна', to: 'к Анне', line: { id: 'xypnao-5', gr: 'Τώρα δεν ξυπνάω στις 5 το πρωί.', ru: '' }, voice: 'athina' },
+  { id: 'giorgos', name: 'Йоргос', to: 'к Йоргосу', line: { id: 'am1-kalimera-me-lene-giorgo', gr: 'Καλημέρα. Με λένε Γιώργο.', ru: '' }, voice: 'nestoras' },
+  { id: 'petros', name: 'Петрос', to: 'к Петросу', line: { id: 'pame-grigora-stasi', gr: 'Πάμε γρήγορα στη στάση!', ru: '' }, voice: 'nestoras' },
+];
+// русские строки курса — из content/blocks (подставляет сборка ниже, если пусто — без перевода)
+const COURSE_RU = /*COURSE_RU*/{"pad-070": "дверь кабинета есть открытая", "hab-vlepei": "Мария обычно смотрит телевизор", "domatia-ntoulapa-balkoni": "все комнаты имеют шкаф и балкон", "kleise-parathyro": "закрой окно, прошу тебя", "psygeio-kai-fournos": "холодильник и духовка", "vivlio-vivlia": "книга книги", "dose-mou": "дай мне сумку", "ela-kafe": "приходи в дом на один кофе", "kratao-kainouria-omprela": "держу свой новый зонт", "kokkino-krasi": "красное вино", "kleidia-grafeion": "ключи кабинетов есть здесь", "den-chrisimopoioume-fourno": "не используем духовку", "thelo-ena-psomi": "хочу хлеб", "mono-gala-kai-meli": "используем только молоко и мёд", "choriatiki-salata": "греческий салат", "xypnao-5": "теперь не просыпаюсь в 5 утра", "kinito-chalase": "мобильный телефон ваш сломался", "sp-pigaino": "иду в дом", "echete-kipo": "имеете сад при доме вашем?", "yparchei-farmakeio": "имеется аптека здесь близко?", "kainouria-kafeteria-thalassa": "знаю одно новое кафе рядом с морем", "kentro-kentriko-dromo": "живу в центре, на одной центральной улице", "pad-081": "машина госпожи есть красная", "ta-taxi-perimenoun": "такси ждут снаружи", "pao-leoforeio": "иду с автобусом", "pad-073": "остановка автобуса есть здесь", "my-perpatao": "хожу пешком с собакой моей", "idea-anemelia": "дети играют с беззаботностью на пляже", "my-kolympao": "плаваю в море", "mageireuete-etoimo-fagito": "готовите дома или едите готовую еду?", "spiti-oraio": "дом есть красивый", "arnaki-ston-fourno": "ягнёночек в духовке", "am1-kalimera-me-lene-giorgo": "Доброе утро. Меня зовут Йоргос.", "pame-grigora-stasi": "идём быстро на остановку!"}/*END*/;
+for (const w of WORDS) if (w.line && COURSE_RU[w.line.id]) w.line.ru = COURSE_RU[w.line.id];
+for (const p of PEOPLE) if (COURSE_RU[p.line.id]) p.line.ru = COURSE_RU[p.line.id];
+const MARK = { m: '♂', f: '♀', n: '○' };
+const markOf = w => MARK[w.g] + (w.pl ? ' · мн.' : '');   // род у множественного — «○ · мн.» (как в прописи)
+let room = 'living';   // комната, где игрок (гостиная / кухня)
+const roomOf = o => (o.userData && o.userData.room) || 'living';
+const roomWords = () => WORDS.filter(w => (w.room || 'living') === room);
+const byId = Object.fromEntries(WORDS.map(w => [w.id, w]));
+
+// ---------- журнал (только на своём сервере) ----------
+// event:'palace' и поле item (не word): сводка прогресса и воронка прописи считают запись с word без event пройденной строкой
+const OWN = /(^|\.)easygreek\.app$/.test(location.hostname);   // журнал — только на сайте EasyGreek
+const AUDIO_BASE = (OWN || /[?&]localaudio=1/.test(location.search)) ? '' : 'https://easygreek.app/greek/palace/';   // озвучка не входит в репозиторий: берём с сайта; ?localaudio=1 — свои mp3 (tools/say.py)
+let ME = ''; try { ME = (localStorage.getItem('propis-session') ? localStorage.getItem('propis-me') || '' : '').slice(0, 40); } catch (e) {}
+function log(act, extra) {
+  if (!OWN) return;
+  const d = Object.assign({ ev: 'palace', event: 'palace', act, room: room + '-1', me: ME, ts: Date.now(), vw: innerWidth, vh: innerHeight }, extra || {});
+  const h = { 'Content-Type': 'application/json' };
+  try { const t = localStorage.getItem('propis-session'); if (t) h['X-Propis-Session'] = t; } catch (e) {}
+  try { fetch('/greek/api/passes', { method: 'POST', headers: h, body: JSON.stringify(d), credentials: 'same-origin', keepalive: true }).catch(() => {}); } catch (e) {}
+}
+
+// ---------- сцена ----------
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x9fd0ee);   // 12.11: небо всегда — комнаты закрыты стенами и потолком, небо видно только в проёмы и снаружи
+scene.fog = new THREE.Fog(0x9fd0ee, 420, 847);   // туман есть всегда (без перекомпиляции шейдеров), густеет только на улице — см. кадр
+let ROOT = scene;   // куда строятся box / item / decor (улица — в своей повёрнутой группе)
+const camera = new THREE.PerspectiveCamera(70, 1, 0.05, 50);
+const EYE = 1.6;
+const player = { x: 0, z: 2.3, yaw: 0, pitch: innerWidth < innerHeight ? -0.24 : -0.12, tx: null, tz: null }; // yaw 0 = взгляд в комнату (к окну, z−)
+
+scene.add(new THREE.HemisphereLight(0xfff4e6, 0x3a3f4a, 1.15));
+const sun = new THREE.DirectionalLight(0xffffff, 1.1); sun.position.set(2, 4, 3); scene.add(sun);
+const yardSun = new THREE.DirectionalLight(0xfff3d6, 0); yardSun.position.set(-3, 6, 2); scene.add(yardSun);   // во дворе — день (goRoom включает)
+const roomLights = [];   // [лампа, комната, яркость] — гаснут вместе с комнатой (cull)
+const lampLight = new THREE.PointLight(0xffd9a0, 2.2, 6, 1.6); scene.add(lampLight); roomLights.push([lampLight, 'living', 2.2]);
+
+const M = (c, o) => new THREE.MeshLambertMaterial(Object.assign({ color: c }, o || {}));
+function box(w, h, d, mat, x, y, z, parent) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); (parent || ROOT).add(m); return m; }
+function cyl(rt, rb, h, mat, x, y, z, parent, seg) { const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg || 20), mat); m.position.set(x, y, z); (parent || ROOT).add(m); return m; }
+function sph(r, mat, x, y, z, parent) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 14), mat); m.position.set(x, y, z); (parent || ROOT).add(m); return m; }
+// ---------- бесшовный дом (12.11: «стоит ли делать переходы между комнатами как разные сцены»): стены с проёмами вместо закрытых дверей ----------
+// Дом — одна планировка: спальня | гостиная | кухня в ряд, за ними (z+) коридор, из кухни на восток — двор, из двора на юг — улица и море.
+const DOOR_W = 1.1, DOOR_H = 2.1;
+function wallX(x0, x1, z, holes, mat, h) {   // стена вдоль x на z с проёмами (середины holes), над проёмом — перемычка
+  const H = h || RH; let a = x0;
+  for (const c of [...holes].sort((p, q) => p - q)) { const l = c - DOOR_W / 2 - a; if (l > 0.01) box(l, H, 0.1, mat, a + l / 2, H / 2, z); box(DOOR_W, H - DOOR_H, 0.1, mat, c, DOOR_H + (H - DOOR_H) / 2, z); a = c + DOOR_W / 2; }
+  const l = x1 - a; if (l > 0.01) box(l, H, 0.1, mat, a + l / 2, H / 2, z);
+}
+function wallZ(z0, z1, x, holes, mat, h) {   // то же вдоль z на x
+  const H = h || RH; let a = z0;
+  for (const c of [...holes].sort((p, q) => p - q)) { const l = c - DOOR_W / 2 - a; if (l > 0.01) box(0.1, H, l, mat, x, H / 2, a + l / 2); box(0.1, H - DOOR_H, DOOR_W, mat, x, DOOR_H + (H - DOOR_H) / 2, c); a = c + DOOR_W / 2; }
+  const l = z1 - a; if (l > 0.01) box(0.1, H, l, mat, x, H / 2, a + l / 2);
+}
+// рама проёма и распахнутая створка, сложенная вдоль стены: alongX — стена вдоль x; side — на какую сторону стены (+1/−1 по нормали); hinge — петли слева (−1) или справа (+1)
+function doorway(x, z, alongX, side, col, hinge, g) {
+  const d = g || new THREE.Group(); if (!g) { d.position.set(x, 0, z); ROOT.add(d); } if (!alongX) d.rotation.y = Math.PI / 2;
+  const o = g ? new THREE.Vector3(x - g.position.x, -g.position.y, z - g.position.z) : new THREE.Vector3(), q = new THREE.Group(); q.position.copy(o); d.add(q);
+  box(DOOR_W + 0.12, 0.06, 0.17, white, 0, DOOR_H + 0.03, 0, q); box(0.06, DOOR_H, 0.17, white, -DOOR_W / 2 - 0.03, DOOR_H / 2, 0, q); box(0.06, DOOR_H, 0.17, white, DOOR_W / 2 + 0.03, DOOR_H / 2, 0, q);
+  const leaf = new THREE.Group(); leaf.position.set(hinge * (DOOR_W / 2 + 0.07), 0, side * 0.13); leaf.rotation.y = hinge > 0 ? 0 : Math.PI; q.add(leaf);   // створка уходит от петель вдоль стены
+  box(DOOR_W - 0.06, DOOR_H - 0.04, 0.05, M(col), (DOOR_W - 0.06) / 2, (DOOR_H - 0.04) / 2, 0, leaf); sph(0.035, metal, DOOR_W - 0.16, 1.0, side * 0.04, leaf);
+  return d;
+}
+
+// комната 7 × 6, высота 2.8; центр в (0,0)
+const RW = 7, RD = 6, RH = 2.8;
+const floor = box(RW, 0.1, RD, M(0xb08a62), 0, -0.05, 0); floor.userData.floor = true;
+const floors = [floor];
+let buildRoom = 'living';   // в какую комнату попадают item / decor / person при постройке
+const wallM = M(0xe9e4da), wallM2 = M(0xdcd6ca);
+box(RW, RH, 0.1, wallM, 0, RH / 2, -RD / 2);        // дальняя стена (z−)
+wallX(-RW / 2, RW / 2, RD / 2, [1.9, -2.0], wallM2);   // ближняя (z+): два проёма в коридор
+box(0.1, RH, RD, wallM2, -RW / 2, RH / 2, 0);       // левая (x−)
+box(0.1, RH, RD, wallM, RW / 2, RH / 2, 0);         // правая (x+)
+box(RW, 0.1, RD, M(0xf3efe8, { emissive: 0x8c877e }), 0, RH + 0.05, 0);     // потолок (свой свет: снизу его полусфера не освещает)
+box(RW - 0.2, 0.08, 0.04, M(0xffffff), 0, 0.04, -RD / 2 + 0.07); // плинтус
+
+const objects = []; // группы с userData.word
+function item(id, build, labelY, kits) {
+  const g = new THREE.Group(); build(g); ROOT.add(g);
+  g.userData.word = id; g.userData.labelY = labelY; g.userData.room = buildRoom; objects.push(g);
+  if (kits) kitify(g, kits);
+  return g;
+}
+// ---------- модели Kenney (10.11: набор A — «смешнее и технически легче»; CC0, models/LICENSE-*) ----------
+// Самодельная фигура остаётся, пока модель грузится, и навсегда — если модель не загрузилась (офлайн, старый браузер).
+// Размер модели подгоняется под место прежней фигуры: h — высота, l — длина по большей стороне пола (оба — растяжение по своим осям).
+const gltf = new GLTFLoader(), kitCache = new Map(), kitJobs = [];
+const loadKit = n => { if (!kitCache.has(n)) kitCache.set(n, gltf.loadAsync('models/' + n + '.glb')); return kitCache.get(n); };
+function lambert(o) {   // свет сцены настроен под Lambert — модели в ту же гамму
+  o.traverse(m => {
+    if (!m.isMesh) return;
+    const conv = x => new THREE.MeshLambertMaterial({ color: x.color, map: x.map || null, vertexColors: !!x.vertexColors, transparent: !!x.transparent, opacity: x.opacity ?? 1, side: x.side });
+    m.material = Array.isArray(m.material) ? m.material.map(conv) : conv(m.material);
+  });
+}
+// tint — перекрасить модель в свой цвет, сохранив светлее/темнее между её материалами (кайма ковра остаётся темнее); notex — без текстуры-палитры
+// (у каждой копии свой материал после lambert — другие копии той же модели не меняются)
+function tint(root, hex, notex) {
+  const lum = c => (c.r + c.g + c.b) / 3, t = new THREE.Color(hex); let ref = 0;
+  root.traverse(m => { if (m.isMesh) ref = Math.max(ref, lum(m.material.color)); });
+  root.traverse(m => { if (!m.isMesh) return; const k = lum(m.material.color) / (ref || 1); m.material.color.copy(t).multiplyScalar(k); if (notex) { m.material.map = null; m.material.needsUpdate = true; } });
+}
+function fit(root, wrap, o) {
+  root.rotation.y = o.ry || 0;
+  let b = new THREE.Box3().setFromObject(wrap); const sz = b.getSize(new THREE.Vector3());
+  const kl = o.l ? o.l / Math.max(sz.x, sz.z) : null, kh = o.h ? o.h / sz.y : null;
+  const kxz = kl || kh, ky = kh || kl;
+  root.scale.set(kxz, ky, kxz);
+  b = new THREE.Box3().setFromObject(wrap); const c = b.getCenter(new THREE.Vector3());
+  root.position.set((o.x || 0) - c.x, (o.y || 0) - b.min.y, (o.z || 0) - c.z);
+}
+function kit(g, name, o) {
+  return loadKit(name).then(gl => {
+    const root = gl.scene.clone(true), wrap = new THREE.Group(); wrap.add(root);
+    lambert(root); if (o.tint) tint(root, o.tint, o.notex);
+    fit(root, wrap, o); g.add(wrap); return wrap;
+  });
+}
+function kitify(g, list) {   // прежние фигуры группы — в запас; невидимые рамки попадания (hitM) остаются
+  const prim = new THREE.Group();
+  for (const c of [...g.children]) if (c.material !== hitM) prim.add(c);
+  g.add(prim);
+  const job = Promise.all(list.map(([n, o]) => kit(g, n, o))).then(() => { g.remove(prim); }, e => { console.warn('модель не загрузилась', e); });
+  kitJobs.push(job); return job;
+}
+const decors = [];   // мебель без слова (стойка, стул экзаменатора) — для раскладки и проверки наложений
+function decor(x, z, build, kits, name) { const g = new THREE.Group(); g.position.set(x, 0, z); build(g); ROOT.add(g); kitify(g, kits); g.userData.name = name || kits[0][0]; g.userData.room = buildRoom; decors.push(g); return g; }
+// 12.11: декор из одних простых форм (без моделей — kitify убрал бы формы) и модели поверх оставленных форм (остановка, автобус, кафе)
+function deco(x, z, build, name) { const g = new THREE.Group(); g.position.set(x, 0, z); build(g); ROOT.add(g); g.userData.name = name; g.userData.room = buildRoom; decors.push(g); return g; }
+function keep(g, list) { const job = Promise.all(list.map(([n, o]) => kit(g, n, o))).catch(e => console.warn('модель не загрузилась', e)); kitJobs.push(job); return job; }
+const hitM = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });   // невидимая «рамка» для мелких вещей и людей — по ним легче попасть
+function hit(g, w, h, d, x, y, z) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), hitM); m.position.set(x, y, z); g.add(m); }
+const wood = M(0x7a5236), wood2 = M(0x996a44), white = M(0xf5f5f2), dark = M(0x1d232b), metal = M(0x9aa3ad);
+
+// диван у левой стены
+item('kanapes', g => {
+  const fab = M(0x3f6f8f); g.position.set(-2.95, 0, 0.4);
+  box(0.9, 0.42, 2.1, fab, 0, 0.21, 0, g); box(0.22, 0.85, 2.1, fab, -0.34, 0.42, 0, g);
+  box(0.9, 0.6, 0.18, fab, 0, 0.3, -1.05, g); box(0.9, 0.6, 0.18, fab, 0, 0.3, 1.05, g);
+  box(0.6, 0.14, 0.9, M(0x5a87a6), 0.08, 0.49, -0.48, g); box(0.6, 0.14, 0.9, M(0x5a87a6), 0.08, 0.49, 0.48, g);
+}, 1.15, [['loungeDesignSofa', { l: 2.1, h: 0.85, ry: Math.PI / 2 }]]);
+// телевизор напротив дивана, у правой стены
+item('tileorasi', g => {
+  g.position.set(3.15, 0, 0.4);
+  box(0.45, 0.5, 1.8, wood, 0, 0.25, 0, g);               // тумба
+  box(0.06, 0.75, 1.35, dark, 0.05, 0.98, 0, g);          // экран
+  box(0.02, 0.66, 1.26, M(0x23415a, { emissive: 0x10324a }), -0.0, 0.98, 0, g);
+}, 1.55, [['cabinetTelevision', { l: 1.8, h: 0.5, ry: -Math.PI / 2 }], ['televisionModern', { l: 1.35, h: 0.8, y: 0.5, x: 0.05, ry: -Math.PI / 2 }]]);
+// стол в центре и стул
+item('trapezi', g => {
+  g.position.set(0.2, 0, -0.4);
+  box(1.4, 0.06, 0.9, wood2, 0, 0.75, 0, g);
+  for (const [x, z] of [[-0.62, -0.38], [0.62, -0.38], [-0.62, 0.38], [0.62, 0.38]]) box(0.06, 0.72, 0.06, wood2, x, 0.36, z, g);
+}, 0.95, [['table', { l: 1.4, h: 0.78 }]]);
+item('karekla', g => {
+  g.position.set(0.2, 0, 0.35);
+  box(0.46, 0.05, 0.46, wood, 0, 0.46, 0, g); box(0.46, 0.5, 0.05, wood, 0, 0.72, 0.21, g);
+  for (const [x, z] of [[-0.2, -0.2], [0.2, -0.2], [-0.2, 0.2], [0.2, 0.2]]) box(0.04, 0.46, 0.04, wood, x, 0.23, z, g);
+}, 0.62, [['chair', { h: 0.97, ry: Math.PI }]]);  // подпись на спинке: стул стоит перед столом, над ним — подписи стола и книги
+// книга на столе
+item('vivlio', g => {
+  g.position.set(-0.1, 0.8, -0.5);
+  box(0.24, 0.05, 0.32, M(0xc0392b), 0, 0, 0, g); box(0.22, 0.045, 0.30, white, 0.012, 0, 0, g);
+}, 0.2);
+// окно на дальней стене
+item('parathyro', g => {
+  g.position.set(-1.3, 1.55, -RD / 2 + 0.06);
+  box(1.6, 1.25, 0.04, M(0xbfe3f5, { emissive: 0x6aa6c8, emissiveIntensity: 0.55 }), 0, 0, 0, g);
+  box(1.72, 0.07, 0.08, white, 0, 0.66, 0, g); box(1.72, 0.07, 0.08, white, 0, -0.66, 0, g);
+  box(0.07, 1.3, 0.08, white, -0.83, 0, 0, g); box(0.07, 1.3, 0.08, white, 0.83, 0, 0, g); box(0.05, 1.25, 0.06, white, 0, 0, 0, g);
+}, 0.85);
+// дверь на ближней стене
+item('porta', g => {   // 12.11: проём в коридор, дверь распахнута и сложена к стене со стороны коридора
+  g.position.set(1.9, 0, RD / 2); doorway(1.9, RD / 2, true, 1, 0x8b5a3c, -1, g);
+}, 2.3);
+// зеркало у двери
+item('kathreftis', g => {
+  g.position.set(0.55, 1.45, RD / 2 - 0.07);
+  box(0.6, 0.95, 0.03, M(0xd9e6ee, { emissive: 0x8fa5b3, emissiveIntensity: 0.35 }), 0, 0, 0, g);
+  box(0.68, 1.03, 0.025, M(0xb8975a), 0, 0, 0.01, g);
+}, 0.7);
+// холодильник в кухонном углу (дальний правый)
+item('psygeio', g => {
+  // 10.11 («дверцы холодильника не открыть — упёрлись в столешницу»): лицом в комнату, как стойка, вплотную к стенам угла
+  g.position.set(3.03, 0, -2.62);
+  box(0.75, 1.85, 0.6, white, 0, 0.925, 0, g); box(0.03, 0.5, 0.02, metal, -0.3, 1.25, 0.31, g); box(0.03, 0.35, 0.02, metal, -0.3, 0.55, 0.31, g);
+  box(0.76, 0.01, 0.61, M(0xcfd3d6), 0, 1.15, 0, g);
+}, 2.05, [['kitchenFridgeLarge', { h: 1.85, l: 0.8 }]]);
+// шкаф в дальнем левом углу
+item('ntoylapa', g => {
+  g.position.set(-3.05, 0, -2.39);
+  box(0.65, 2.1, 1.1, wood, 0, 1.05, 0, g); box(0.02, 2.0, 0.01, dark, 0.33, 1.05, 0, g);
+  sph(0.03, metal, 0.34, 1.1, -0.08, g); sph(0.03, metal, 0.34, 1.1, 0.08, g);
+}, 2.3, [['bookcaseClosedDoors', { h: 2.1, l: 1.1, ry: Math.PI / 2 }]]);
+// лампа у дивана
+item('lampa', g => {
+  g.position.set(-2.9, 0, 1.85);
+  cyl(0.18, 0.2, 0.04, dark, 0, 0.02, 0, g); cyl(0.02, 0.02, 1.45, metal, 0, 0.74, 0, g);
+  cyl(0.14, 0.26, 0.3, M(0xfff1d6, { emissive: 0xffcf7a, emissiveIntensity: 0.9 }), 0, 1.55, 0, g, 24);
+}, 1.95, [['lampRoundFloor', { h: 1.75 }]]);
+lampLight.position.set(-2.9, 1.5, 1.85);
+// компьютер на столике у правой стены
+item('ypologistis', g => {
+  g.position.set(3.05, 0, 2.3);
+  box(0.6, 0.05, 1.0, wood2, 0, 0.74, 0, g); box(0.05, 0.72, 0.05, wood2, -0.25, 0.36, -0.45, g); box(0.05, 0.72, 0.05, wood2, -0.25, 0.36, 0.45, g);
+  box(0.05, 0.72, 0.05, wood2, 0.25, 0.36, -0.45, g); box(0.05, 0.72, 0.05, wood2, 0.25, 0.36, 0.45, g);
+  box(0.05, 0.42, 0.62, dark, 0.12, 1.03, 0, g); box(0.01, 0.36, 0.56, M(0x2a6f9a, { emissive: 0x1b4a6a }), 0.09, 1.03, 0, g);
+  cyl(0.05, 0.08, 0.06, dark, 0.15, 0.8, 0, g); box(0.18, 0.02, 0.42, M(0x333a44), -0.12, 0.78, 0, g);
+}, 1.4, [['desk', { l: 1.0, h: 0.76, ry: -Math.PI / 2 }], ['computerScreen', { l: 0.62, y: 0.76, x: 0.1, ry: -Math.PI / 2 }], ['computerKeyboard', { l: 0.42, y: 0.76, x: -0.12, ry: -Math.PI / 2 }]]);
+// часы на дальней стене
+item('roloi', g => {
+  g.position.set(1.3, 2.05, -RD / 2 + 0.07);
+  const face = cyl(0.24, 0.24, 0.04, white, 0, 0, 0, g, 32); face.rotation.x = Math.PI / 2;
+  const rim = cyl(0.26, 0.26, 0.03, dark, 0, 0, -0.01, g, 32); rim.rotation.x = Math.PI / 2;
+  box(0.02, 0.15, 0.01, dark, 0, 0.06, 0.03, g); const h2 = box(0.11, 0.02, 0.01, dark, 0.05, 0, 0.03, g);
+}, 0.38);
+// растение у окна
+item('fyto', g => {
+  g.position.set(-1.8, 0, -2.6);   // 10.11: не перед дверцами шкафа
+  cyl(0.2, 0.15, 0.35, M(0xb5653c), 0, 0.175, 0, g);
+  const leaf = M(0x3f8f4a); sph(0.25, leaf, 0, 0.6, 0, g); sph(0.18, leaf, 0.14, 0.78, 0.05, g); sph(0.17, leaf, -0.12, 0.8, -0.04, g);
+}, 1.05, [['pottedPlant', { h: 0.95 }]]);
+
+// предметы квеста: сумка на диване, кофе и ключ на столе, зонт у двери, вино и пиво на кухонной стойке
+item('tsanta', g => {
+  g.position.set(-2.82, 0.5, 0.7);   // на сиденье (10.11: у модели дивана толстые подлокотники — на краю сумка ложилась на подлокотник)
+  box(0.34, 0.24, 0.14, M(0x9b3b3b), 0, 0.12, 0, g);
+  const hd = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.014, 8, 20, Math.PI), M(0x5a2222)); hd.position.set(0, 0.24, 0); g.add(hd);
+  hit(g, 0.42, 0.4, 0.3, 0, 0.17, 0);
+}, 0.45);
+item('kafes', g => {
+  g.position.set(0.6, 0.78, -0.6);
+  cyl(0.08, 0.08, 0.012, white, 0, 0.006, 0, g); cyl(0.045, 0.038, 0.09, white, 0, 0.055, 0, g); cyl(0.04, 0.04, 0.005, M(0x3b2314), 0, 0.098, 0, g);
+  hit(g, 0.24, 0.22, 0.24, 0, 0.08, 0);
+}, 0.3);
+item('kleidi', g => {
+  g.position.set(-0.45, 0.785, -0.3);
+  const r = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.009, 8, 20), metal); r.rotation.x = Math.PI / 2; g.add(r);
+  box(0.09, 0.012, 0.022, metal, 0.075, 0, 0, g); box(0.012, 0.012, 0.03, metal, 0.11, 0, 0.012, g);
+  hit(g, 0.26, 0.16, 0.2, 0.04, 0.05, 0);
+}, 0.28);
+item('omprela', g => {
+  g.position.set(1.12, 0, 2.72); g.rotation.z = 0.1;
+  cyl(0.012, 0.012, 0.98, dark, 0, 0.49, 0, g); cyl(0.075, 0.018, 0.66, M(0x2b4c7e), 0, 0.42, 0, g, 12);
+  const hk = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.013, 8, 16, Math.PI), dark); hk.position.set(0.045, 0.98, 0); hk.rotation.z = Math.PI; g.add(hk);
+  hit(g, 0.3, 1.1, 0.3, 0, 0.55, 0);
+}, 1.2);
+// кухонная стойка у холодильника — на ней вино и пиво («принёс жёлтое пиво, я просил красное вино»)
+decor(1.95, -2.65, g => { box(1.0, 0.9, 0.6, wood, 0, 0.45, 0, g); box(1.04, 0.04, 0.64, M(0xd9d4cb), 0, 0.92, 0, g); },
+  [['kitchenCabinet', { h: 0.94, l: 0.6, x: -0.25 }], ['kitchenCabinet', { h: 0.94, l: 0.6, x: 0.31 }]], 'стойка');
+item('krasi', g => {
+  g.position.set(1.72, 0.94, -2.55);
+  const glass = M(0x5a0f1e); cyl(0.042, 0.042, 0.24, glass, 0, 0.12, 0, g); cyl(0.016, 0.03, 0.1, glass, 0, 0.29, 0, g);
+  box(0.07, 0.08, 0.006, M(0xf3efe8), 0, 0.12, 0.043, g);
+  hit(g, 0.2, 0.42, 0.2, 0, 0.19, 0);
+}, 0.5);
+item('mpira', g => {
+  g.position.set(2.18, 0.94, -2.55);
+  const glass = M(0xd9a21b, { emissive: 0x3a2a00 }); cyl(0.036, 0.036, 0.18, glass, 0, 0.09, 0, g); cyl(0.014, 0.026, 0.08, glass, 0, 0.22, 0, g);
+  box(0.06, 0.06, 0.006, M(0xf3efe8), 0, 0.09, 0.037, g);
+  hit(g, 0.2, 0.36, 0.2, 0, 0.15, 0);
+}, 0.42);
+
+// ---------- люди ----------
+const people = [], mixers = [], chars = {};
+// человечки Kenney Mini Characters: o.model — файл, o.h — рост, o.sy — подъём (сидя — на сиденье); анимации из самой модели (idle, sit, emote-yes, emote-no)
+function person(p, x, z, rot, shirt, sitting, o) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot;
+  const skin = M(0xe0b090), hair = M(sitting ? 0x3a2a1e : 0x6b4423);
+  const hipY = sitting ? 0.5 : 0.95;
+  box(0.36, 0.55, 0.22, M(shirt), 0, hipY + 0.3, 0, g);                 // корпус
+  sph(0.13, skin, 0, hipY + 0.72, 0, g); sph(0.135, hair, 0, hipY + 0.78, -0.02, g);
+  if (sitting) { box(0.34, 0.14, 0.42, M(0x2d3640), 0, hipY, 0.14, g); box(0.12, 0.5, 0.12, M(0x2d3640), -0.09, 0.25, 0.32, g); box(0.12, 0.5, 0.12, M(0x2d3640), 0.09, 0.25, 0.32, g); }
+  else { box(0.13, 0.95, 0.14, M(0x2d3640), -0.09, 0.47, 0, g); box(0.13, 0.95, 0.14, M(0x2d3640), 0.09, 0.47, 0, g); }
+  box(0.09, 0.5, 0.1, M(shirt), -0.24, hipY + 0.28, 0, g); box(0.09, 0.5, 0.1, M(shirt), 0.24, hipY + 0.28, 0, g);
+  scene.add(g); g.userData.person = p.id; g.userData.labelY = hipY + 1.0; g.userData.room = buildRoom; g.userData.sitting = !!sitting; people.push(g);
+  if (o && o.model) {
+    const prim = new THREE.Group(); for (const c of [...g.children]) prim.add(c); g.add(prim);
+    hit(g, 0.62, sitting ? 1.35 : 1.7, 0.62, 0, sitting ? 0.68 : 0.85, sitting ? 0.12 : 0);   // рамка попадания — по человечку легко попасть
+    kitJobs.push(loadKit(o.model).then(gl => {
+      const root = gl.scene, wrap = new THREE.Group(); wrap.add(root); lambert(root);
+      fit(root, wrap, { h: o.h, y: o.sy || 0 });
+      const mx = new THREE.AnimationMixer(root); mixers.push(mx);
+      const clip = n => THREE.AnimationClip.findByName(gl.animations, n);
+      const base = mx.clipAction(clip(sitting ? 'sit' : 'idle')); base.play();
+      let still = null;
+      if (!sitting) {   // 10.11 («как будто эпилепсия, трясётся»): покой Kenney — качание 5° за 1,3 с; втрое медленнее и вполовину слабее (смесь с неподвижной позой)
+        base.timeScale = 0.35; base.setEffectiveWeight(0.5);
+        still = mx.clipAction(clip('static')); still.play(); still.setEffectiveWeight(0.5);
+      }
+      const c = chars[p.id] = { mx, clip, base, still, cur: base };
+      mx.addEventListener('finished', e => { if (e.action !== c.cur || c.cur === base) return;   // реакция сыграна — назад в покой
+        base.reset(); base.play(); base.crossFadeFrom(e.action, 0.5, false); c.cur = base; });
+      g.add(wrap); g.remove(prim); g.userData.labelY = o.labelY || g.userData.labelY;
+    }, e => console.warn('человечек не загрузился', e)));
+  }
+  return g;
+}
+function charDo(id, name) {   // одна реакция (кивок, «нет») и обратно в покой
+  const c = chars[id], cl = c && c.clip(name); if (!cl) return;
+  const a = c.mx.clipAction(cl); a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.timeScale = 0.5;   // кивок и «нет» — вдвое медленнее (0,67 с у Kenney — рывок)
+  a.play(); a.crossFadeFrom(c.cur, 0.4, false); c.cur = a;
+}
+// экзаменатор сидит за столом лицом к стулу ученика
+person(PEOPLE[0], 0.2, -1.25, 0, 0x4b5d73, true, { model: 'character-male-d', h: 1.5, sy: 0.3, labelY: 1.75 });
+decor(0.2, -1.27, g => { box(0.46, 0.05, 0.46, wood, 0, 0.46, 0, g); box(0.46, 0.5, 0.05, wood, 0, 0.72, -0.21, g); }, [['chair', { h: 0.97 }]], 'стул экзаменатора');
+// Элени у окна
+person(PEOPLE[1], -0.9, -2.2, 0.4, 0xb04a6a, false, { model: 'character-female-b', h: 1.5, labelY: 1.75 });
+
+// ---------- кухня (10.11: — «кухни, спальни… всё, что может пригодиться на экзамене»; — «давай генерируй») ----------
+// Вторая комната той же сцены, в 12 м от гостиной; переход — кнопкой у двери. Мебель — Kenney Furniture Kit, еда и посуда — Food Kit (CC0).
+// Квест κύριος Νίκος: «Δώσε μου δύο αυγά / τρεις ντομάτες / τρία λεμόνια» — правило курса 4.6 (ng-treis-tria): τρεις/τέσσερις у ♂ ♀, τρία/τέσσερα у ○.
+const KX = 6.6, KW = 6, KD = 5, KYD = 1.5;   // 12.11: кухня вплотную к гостиной (x 3,6…9,6); KYD — проём во двор на восточной стене
+buildRoom = 'kitchen';
+{
+  const kf = box(KW, 0.1, KD, M(0xcfc6b8), KX, -0.05, 0); kf.userData.floor = true; kf.userData.room = 'kitchen'; floors.push(kf);
+  box(KW, RH, 0.1, wallM, KX, RH / 2, -KD / 2); wallX(KX - KW / 2, KX + KW / 2, KD / 2, [KX + 1.8], wallM2);
+  box(0.1, RH, KD, wallM2, KX - KW / 2, RH / 2, 0); wallZ(-KD / 2, KD / 2, KX + KW / 2, [KYD], wallM);
+  box(KW, 0.1, KD, M(0xf3efe8, { emissive: 0x8c877e }), KX, RH + 0.05, 0);
+  const kl = new THREE.PointLight(0xfff1dc, 2.4, 7, 1.4); kl.position.set(KX, 2.5, 0); scene.add(kl); roomLights.push([kl, 'kitchen', 2.4]);
+  const win = new THREE.Group(); win.position.set(KX - 0.8, 1.62, -KD / 2 + 0.06); scene.add(win);   // окно над раковиной и проёмы — без слова (слова «окно», «дверь» — в гостиной)
+  box(1.4, 1.1, 0.04, M(0xbfe3f5, { emissive: 0x6aa6c8, emissiveIntensity: 0.55 }), 0, 0, 0, win);
+  box(1.5, 0.07, 0.08, white, 0, 0.58, 0, win); box(1.5, 0.07, 0.08, white, 0, -0.58, 0, win); box(0.07, 1.16, 0.08, white, -0.73, 0, 0, win); box(0.07, 1.16, 0.08, white, 0.73, 0, 0, win);
+  doorway(KX + 1.8, KD / 2, true, 1, 0x8b5a3c, -1);
+}
+// столешница вдоль дальней стены: 8 секций по 0,6 м (раковина и плита — слова), холодильник в углу — без слова
+const KZ = -KD / 2 + 0.36, cabPrim = g => { box(0.58, 0.9, 0.58, wood, 0, 0.45, 0, g); box(0.6, 0.04, 0.6, M(0xd9d4cb), 0, 0.92, 0, g); };
+for (const x of [-2.6, -2.0, -1.4, 0.4, 1.0, 1.6]) decor(KX + x, KZ, cabPrim, [['kitchenCabinet', { h: 0.94, l: 0.6 }]], 'секция ' + x);
+item('nerochytis', g => { g.position.set(KX - 0.8, 0, KZ); cabPrim(g); box(0.4, 0.02, 0.34, metal, 0, 0.95, 0, g); }, 1.15, [['kitchenSink', { h: 0.94, l: 0.6 }]]);
+item('fournos', g => { g.position.set(KX - 0.2, 0, KZ); box(0.58, 0.9, 0.58, white, 0, 0.45, 0, g); box(0.46, 0.4, 0.02, dark, 0, 0.42, 0.3, g); }, 1.2, [['kitchenStove', { h: 0.94, l: 0.6 }]]);
+item('ntoulapi', g => { g.position.set(KX - 2.3, 0, -KD / 2 + 0.23);
+  box(0.58, 0.6, 0.34, wood, -0.3, 1.75, 0, g); box(0.58, 0.6, 0.34, wood, 0.3, 1.75, 0, g); }, 2.2,
+  [['kitchenCabinetUpper', { h: 0.6, l: 0.6, x: -0.3, y: 1.45 }], ['kitchenCabinetUpper', { h: 0.6, l: 0.6, x: 0.3, y: 1.45 }]]);
+decor(KX + 2.45, -KD / 2 + 0.4, g => { box(0.7, 1.8, 0.66, white, 0, 0.9, 0, g); }, [['kitchenFridge', { h: 1.8, l: 0.7 }]], 'холодильник кухни');
+// стол посередине и два стула
+decor(KX + 0.2, 0.5, g => { box(1.2, 0.05, 0.7, wood2, 0, 0.76, 0, g); for (const [x, z] of [[-0.55, -0.3], [0.55, -0.3], [-0.55, 0.3], [0.55, 0.3]]) box(0.05, 0.74, 0.05, wood2, x, 0.37, z, g); },
+  [['table', { l: 1.2, h: 0.78 }]], 'стол кухни');
+decor(KX - 0.65, 0.5, g => { box(0.44, 0.05, 0.44, wood, 0, 0.46, 0, g); }, [['chair', { h: 0.95, ry: Math.PI / 2 }]], 'стул кухни 1');
+decor(KX + 1.05, 0.5, g => { box(0.44, 0.05, 0.44, wood, 0, 0.46, 0, g); }, [['chair', { h: 0.95, ry: -Math.PI / 2 }]], 'стул кухни 2');
+// еда и посуда: запасная фигура — простая форма того же цвета; модель — food/<имя>; мелкому — рамка попадания побольше
+function food(id, x, y, z, model, o, prim, labelY) {
+  return item(id, g => { g.position.set(x, y, z); prim(g); hit(g, Math.max(0.16, (o.l || o.h) * 1.3), 0.18, Math.max(0.16, (o.l || o.h) * 1.3), 0, 0.06, 0); }, labelY || 0.32, [['food/' + model, o]]);
+}
+// счётные: N штук рядом, каждую берут отдельно (userData.unit)
+function units(id, x, y, z, n, step, model, o, prim, labelY) {
+  return item(id, g => { g.position.set(x, y, z);
+    for (let i = 0; i < n; i++) { const u = new THREE.Group(); u.userData.unit = true; u.position.set((i - (n - 1) / 2) * step, 0, 0); prim(u); hit(u, step * 0.95, 0.14, 0.16, 0, 0.05, 0); g.add(u); kitify(u, [['food/' + model, o]]); }
+  }, labelY || 0.3);
+}
+const CT = 1.0;   // над столешницей: вещь сама встанет на поверхность (settle)
+food('tigani', KX - 2.6, CT, KZ + 0.02, 'frying-pan', { l: 0.42 }, g => cyl(0.12, 0.12, 0.03, dark, 0, 0.015, 0, g));
+units('avgo', KX - 2.0, CT, KZ + 0.05, 4, 0.1, 'egg', { h: 0.06 }, u => sph(0.025, M(0xf2e3c6), 0, 0.03, 0, u));
+units('ntomata', KX - 1.4, CT, KZ + 0.05, 4, 0.11, 'tomato', { l: 0.075 }, u => sph(0.036, M(0xd8402e), 0, 0.036, 0, u));
+food('katsarola', KX - 0.27, CT, KZ, 'pot', { l: 0.26 }, g => cyl(0.11, 0.11, 0.13, metal, 0, 0.065, 0, g));
+units('lemoni', KX + 0.4, CT, KZ + 0.05, 4, 0.11, 'lemon', { l: 0.075 }, u => sph(0.034, M(0xf0d23c), 0, 0.034, 0, u));
+food('psomi', KX + 0.92, CT, KZ + 0.02, 'loaf', { l: 0.26 }, g => box(0.24, 0.1, 0.12, M(0xc58a4a), 0, 0.05, 0, g));
+food('machairi', KX + 1.2, CT, KZ + 0.12, 'utensil-knife', { l: 0.2 }, g => box(0.2, 0.01, 0.025, metal, 0, 0.005, 0, g), 0.25);
+food('psari', KX + 1.48, CT, KZ + 0.02, 'fish', { l: 0.3 }, g => box(0.28, 0.06, 0.08, M(0x8fa0b8), 0, 0.03, 0, g));
+food('gala', KX + 1.78, CT, KZ - 0.05, 'carton', { h: 0.22 }, g => box(0.08, 0.22, 0.08, M(0xeeeeff), 0, 0.11, 0, g), 0.4);
+const TT = 0.86;   // над столом
+food('piato', KX + 0.05, TT, 0.5, 'plate', { l: 0.24 }, g => cyl(0.12, 0.1, 0.02, white, 0, 0.01, 0, g), 0.25);
+food('pirouni', KX - 0.2, TT, 0.5, 'utensil-fork', { l: 0.18 }, g => box(0.18, 0.01, 0.025, metal, 0, 0.005, 0, g), 0.22);
+food('koutali', KX + 0.3, TT, 0.5, 'utensil-spoon', { l: 0.18 }, g => box(0.18, 0.01, 0.03, metal, 0, 0.005, 0, g), 0.22);
+food('potiri', KX + 0.12, TT, 0.27, 'glass', { h: 0.12 }, g => cyl(0.035, 0.03, 0.12, M(0xdde8f0), 0, 0.06, 0, g), 0.3);
+food('salata', KX + 0.56, TT, 0.62, 'salad', { l: 0.22 }, g => cyl(0.11, 0.08, 0.07, M(0x5aa64a), 0, 0.035, 0, g));
+food('tyri', KX + 0.58, TT, 0.3, 'cheese', { l: 0.14 }, g => cyl(0.07, 0.07, 0.05, M(0xf2c94c), 0, 0.025, 0, g));
+food('milo', KX - 0.22, TT, 0.27, 'apple', { l: 0.08 }, g => sph(0.04, M(0xd8402e), 0, 0.04, 0, g));
+food('banana', KX - 0.25, TT, 0.74, 'banana', { l: 0.19 }, g => box(0.18, 0.04, 0.05, M(0xf0d23c), 0, 0.02, 0, g));
+person(PEOPLE[2], KX - 0.9, -1.3, 0, 0x2f6f4f, false, { model: 'character-male-b', h: 1.5, labelY: 1.75 });
+
+// ---------- двор (10.11: «давай дальше сделаем большую сцену»): Nature Kit Kenney (CC0, models/nature, LICENSE-kenney-nature-kit.txt).
+// Дверь из кухни (западная стена) → двор: стена дома с дверью на западе (закрывает вид на кухню), забор с трёх сторон, огород, цветы, кактусы в горшках.
+const YX = KX + KW / 2 + 5.05, YW = 10, YD = 8, YDZ = KYD, NAT = 'nature/';   // 12.11: двор сразу за восточной стеной кухни (стена дома — x 9,65)
+buildRoom = 'yard';
+{
+  const yf = box(YW + 0.2, 0.1, YD + 0.2, M(0x7fb35a), YX, -0.05, 0); yf.userData.floor = true; yf.userData.room = 'yard'; floors.push(yf);
+  const ring = box(40, 0.1, 50, M(0x86b862), YX + 15, -0.08, 0); ring.userData.room = 'yard';   // земля за забором до горизонта
+  const hx = YX - YW / 2 - 0.05;   // стена дома: штукатурка, черепица, дверь, окно
+  wallZ(-(YD + 3) / 2, (YD + 3) / 2, hx + 0.05, [YDZ], M(0xf1e6d2), 3.2); box(0.7, 0.18, YD + 3.2, M(0xb5532f), hx + 0.35, 3.25, 0);   // снаружи стены кухни
+  doorway(hx + 0.025, YDZ, false, 1, 0x6f8f5a, 1);   // общий проём кухня ↔ двор (две стены), створка — к стене со стороны двора
+  const win = new THREE.Group(); win.position.set(hx + 0.11, 1.6, -1.8); win.rotation.y = -Math.PI / 2; scene.add(win);
+  box(1.2, 1.0, 0.04, M(0xbfe3f5, { emissive: 0x6aa6c8, emissiveIntensity: 0.4 }), 0, 0, 0, win);
+  box(1.3, 0.07, 0.08, white, 0, 0.53, 0, win); box(1.3, 0.07, 0.08, white, 0, -0.53, 0, win); box(0.07, 1.06, 0.08, white, -0.63, 0, 0, win); box(0.07, 1.06, 0.08, white, 0.63, 0, 0, win);
+}
+// забор: восточная сторона — слово «ο φράχτης», северная и южная — без слова; секции по 1 м вдоль стороны
+const fenceRow = (n, ry, along) => Array.from({ length: n }, (_, i) => [NAT + 'fence_simple', { l: 1.0, ry, [along]: (i - (n - 1) / 2) * 1.0 }]);
+const fencePrim = (g, w, d) => { box(w, 0.06, d, wood2, 0, 0.55, 0, g); box(w, 0.06, d, wood2, 0, 0.25, 0, g); };
+item('fraktis', g => { g.position.set(YX + YW / 2 - 0.12, 0, 0); fencePrim(g, 0.06, YD - 0.6); }, 1.0, fenceRow(7, Math.PI / 2, 'z'));
+decor(YX - 0.2, -YD / 2 + 0.12, g => fencePrim(g, YW - 1.2, 0.06), fenceRow(9, 0, 'x'), 'забор север');
+decor(YX - 0.7, YD / 2 - 0.12, g => fencePrim(g, YW - 2.2, 0.06), fenceRow(8, 0, 'x'), 'забор юг');   // 12.11: последняя секция у угла — калитка на улицу
+const YGX = YX + 3.8;   // калитка в южном заборе → улица
+deco(YGX, YD / 2 - 0.12, g => {   // столбы и открытая наружу створка (без слова)
+  for (const s of [-1, 1]) { box(0.1, 0.85, 0.1, wood2, s * 0.44, 0.42, 0, g); box(0.14, 0.05, 0.14, wood2, s * 0.44, 0.87, 0, g); }
+  const leaf = new THREE.Group(); leaf.position.set(-0.38, 0, 0); leaf.rotation.y = -0.95; g.add(leaf);
+  for (const y of [0.25, 0.75]) box(0.78, 0.07, 0.04, M(0x8a5d3b), 0.39, y, 0, leaf);
+  for (let i = 0; i < 5; i++) box(0.08, 0.8, 0.035, M(0x9b6a45), 0.07 + i * 0.16, 0.5, 0.02, leaf);
+}, 'калитка').userData.outside = true;
+// огород на севере: грядка, морковь, кукуруза, две тыквы
+decor(YX - 0.6, -2.85, g => box(3.0, 0.08, 0.7, M(0x6b4a2e), 0, 0.04, 0, g),
+  [[NAT + 'crops_dirtRow', { l: 1.0, x: -1.0, ry: Math.PI / 2 }], [NAT + 'crops_dirtRow', { l: 1.0, x: 0, ry: Math.PI / 2 }], [NAT + 'crops_dirtRow', { l: 1.0, x: 1.0, ry: Math.PI / 2 }]], 'грядка').userData.flat = true;
+item('kalampoki', g => { g.position.set(YX - 0.3, 0.1, -2.85); for (const x of [-0.45, 0, 0.45]) cyl(0.04, 0.05, 1.2, M(0x6aa84f), x, 0.6, 0, g); },
+  1.6, [[NAT + 'crops_cornStageD', { h: 1.3, x: -0.4 }], [NAT + 'crops_cornStageD', { h: 1.3, x: 0.05 }], [NAT + 'crops_cornStageD', { h: 1.3, x: 0.5 }]]);
+item('karoto', g => { g.position.set(YX - 1.6, 0.3, -2.85); cyl(0.02, 0.05, 0.25, M(0xe8812c), 0, 0.12, 0, g); hit(g, 0.4, 0.45, 0.4, 0, 0.15, 0); }, 0.7, [[NAT + 'crop_carrot', { h: 0.4 }]]);
+item('kolokytha-megali', g => { g.position.set(YX + 1.6, 0.3, -2.75); sph(0.3, M(0xe8812c), 0, 0.3, 0, g); }, 0.95, [[NAT + 'crop_pumpkin', { l: 0.62 }]]);
+item('kolokytha-mikri', g => { g.position.set(YX + 2.5, 0.3, -2.75); sph(0.13, M(0xe8812c), 0, 0.13, 0, g); hit(g, 0.35, 0.35, 0.35, 0, 0.15, 0); }, 0.6, [[NAT + 'crop_pumpkin', { l: 0.27 }]]);
+// цветы у южного забора: красный, жёлтый, фиолетовый
+const flower = (id, x, model, col) => item(id, g => { g.position.set(YX + x, 0.3, 3.15); cyl(0.015, 0.015, 0.4, M(0x4f8f3a), 0, 0.2, 0, g); sph(0.08, M(col), 0, 0.42, 0, g); hit(g, 0.4, 0.6, 0.4, 0, 0.3, 0); },
+  0.85, [[NAT + model, { h: 0.5 }]]);
+flower('louloudi-kokkino', -2.6, 'flower_redA', 0xd8402e); flower('louloudi-kitrino', -1.7, 'flower_yellowA', 0xf0d23c); flower('louloudi-mov', -0.8, 'flower_purpleA', 0x8e5bc8);
+// кактусы в горшках: большой и маленький
+item('kaktos-megalos', g => { g.position.set(YX + 1.0, 0.3, 3.1); cyl(0.2, 0.15, 0.32, M(0xb5653a), 0, 0.16, 0, g); cyl(0.09, 0.09, 0.7, M(0x4f8f3a), 0, 0.67, 0, g); },
+  1.35, [[NAT + 'pot_large', { h: 0.34 }], [NAT + 'cactus_tall', { h: 0.75, y: 0.3 }]]);
+item('kaktos-mikros', g => { g.position.set(YX + 1.9, 0.3, 3.1); cyl(0.12, 0.09, 0.2, M(0xb5653a), 0, 0.1, 0, g); cyl(0.06, 0.06, 0.25, M(0x4f8f3a), 0, 0.32, 0, g); hit(g, 0.35, 0.5, 0.35, 0, 0.25, 0); },
+  0.75, [[NAT + 'pot_small', { h: 0.2 }], [NAT + 'cactus_short', { h: 0.28, y: 0.18 }]]);
+// без квеста: дерево, гриб под ним, пальма, камень, трава, горшок с кустом, солнце, облако
+item('dentro', g => { g.position.set(YX + 3.4, 0, 0.9); cyl(0.14, 0.18, 1.6, wood, 0, 0.8, 0, g); sph(0.9, M(0x5a9a3c), 0, 2.2, 0, g); }, 3.4, [[NAT + 'tree_oak', { h: 3.2 }]]);
+item('manitari', g => { g.position.set(YX + 2.4, 0.3, 1.9); cyl(0.03, 0.04, 0.12, white, 0, 0.06, 0, g); sph(0.07, M(0xc8382c), 0, 0.13, 0, g); hit(g, 0.3, 0.3, 0.3, 0, 0.12, 0); }, 0.5, [[NAT + 'mushroom_red', { h: 0.22 }]]);
+item('foinikas', g => { g.position.set(YX + 3.2, 0, -2.3); cyl(0.12, 0.16, 3.2, M(0x9a7a50), 0, 1.6, 0, g); sph(0.7, M(0x4f8f3a), 0, 3.3, 0, g); }, 4.0, [[NAT + 'tree_palmTall', { h: 3.8 }]]);
+item('petra', g => { g.position.set(YX + 0.9, 0, -0.6); sph(0.35, M(0x8d8f94), 0, 0.2, 0, g); }, 0.8, [[NAT + 'rock_largeA', { l: 0.8 }]]);
+item('chortari', g => { g.position.set(YX - 2.4, 0, -0.9); cyl(0.3, 0.35, 0.3, M(0x5a9a3c), 0, 0.15, 0, g); }, 0.7, [[NAT + 'grass_large', { l: 0.8 }]]);
+item('glastra', g => { g.position.set(YX - 4.2, 0, -3.2); cyl(0.25, 0.18, 0.45, M(0xb5653a), 0, 0.22, 0, g); sph(0.3, M(0x5a9a3c), 0, 0.7, 0, g); },
+  1.3, [[NAT + 'pot_large', { h: 0.45 }], [NAT + 'plant_bush', { h: 0.6, y: 0.4 }]]);
+item('ilios', g => { g.position.set(YX + 6, 7.5, -14); sph(1.1, M(0xffd84a, { emissive: 0xffc21a, emissiveIntensity: 1 }), 0, 0, 0, g); }, 1.5);
+item('synnefo', g => { g.position.set(YX - 1, 6.5, -12); const c = M(0xffffff, { emissive: 0xdde8f0, emissiveIntensity: 0.6 });
+  sph(0.9, c, 0, 0, 0, g); sph(0.7, c, 0.9, -0.15, 0.1, g); sph(0.65, c, -0.9, -0.2, 0, g); sph(0.55, c, 0.3, 0.45, 0, g); }, 1.4);
+// без слова: дорожка от двери, пучки травы, задник за забором
+decor(YX - 3.4, YDZ, g => box(1.6, 0.03, 0.5, M(0xb9b1a3), 0, 0.015, 0, g), [[NAT + 'path_stone', { l: 0.8, x: -0.4 }], [NAT + 'path_stone', { l: 0.8, x: 0.4 }]], 'дорожка').userData.flat = true;
+for (const [x, z] of [[-1.2, 0.6], [1.9, 0.2], [-3.4, -2.0], [2.9, 2.9]]) decor(YX + x, z, g => cyl(0.2, 0.25, 0.2, M(0x5a9a3c), 0, 0.1, 0, g), [[NAT + 'grass', { l: 0.5 }]], 'трава ' + x).userData.flat = true;
+for (const [x, z, m, h] of [[6.5, -6.2, 'tree_default', 3.6], [9.5, -5.6, 'tree_oak', 4], [3.5, -7.5, 'tree_default', 3.2], [0, -6.5, 'tree_detailed', 3.6], [-2, 6.5, 'tree_default', 3.4], [-4, -6.8, 'tree_detailed', 3]])
+  decor(YX + x, z, g => { cyl(0.15, 0.2, h * 0.5, wood, 0, h * 0.25, 0, g); sph(h * 0.3, M(0x5a9a3c), 0, h * 0.7, 0, g); }, [[NAT + m, { h }]], 'задник ' + x).userData.outside = true;
+person(PEOPLE[3], YX - 0.4, 0.4, -Math.PI / 2, 0x7a4f8f, false, { model: 'character-female-d', h: 1.45, labelY: 1.7 });
+
+// ---------- спальня (10.11: «кухни, спальни… всё, что может пригодиться на экзамене»; 11.11: «продолжить строительство сцены») ----------
+// Дверь — вторая на ближней стене гостиной (обе в коридор: справа кухня, слева спальня). Мебель — Kenney Furniture Kit, люди — Mini Characters (CC0);
+// мелочь (телефоны, очки, кошельки, галстук, будильник, мишка, плед, шторы) — простые формы в той же гамме.
+// Квест «чей» (узор курса 9.4; образцы — Δώσε μου την τσάντα., ответ «Όχι, αυτή είναι …» как в гостиной): Анна и Йоргос ищут вещи. У каждого своя тумбочка
+// со своими вещами (у Анны — розовые, у Йоргоса — синие; его галстук — на кровати с его стороны), мои (игрока: зелёный телефон, светлый кошелёк) — на комоде у двери, рядом чемодан.
+// Подписи — с моей точки зрения (το κινητό της — её), просьба — с точки зрения того, кто просит (Анна: «το κινητό μου» — тот же телефон).
+doorway(-2.0, RD / 2, true, 1, 0x8b5a3c, 1);   // проём в коридор к спальне, без слова (η πόρτα — проём к кухне)
+const BX = -6.6, BW = 6, BD = 5;   // 12.11: спальня вплотную к гостиной с запада (x −9,6…−3,6)
+buildRoom = 'bedroom';
+{
+  const bf = box(BW, 0.1, BD, M(0xc4a882), BX, -0.05, 0); bf.userData.floor = true; bf.userData.room = 'bedroom'; floors.push(bf);
+  const wB = M(0xdde4ec), wB2 = M(0xcfd8e3);   // стены — светло-голубые, чтобы спальню не спутать с гостиной
+  box(BW, RH, 0.1, wB, BX, RH / 2, -BD / 2); wallX(BX - BW / 2, BX + BW / 2, BD / 2, [BX + 1.8], wB2);
+  box(0.1, RH, BD, wB2, BX - BW / 2, RH / 2, 0); box(0.1, RH, BD, wB, BX + BW / 2, RH / 2, 0);
+  box(BW, 0.1, BD, M(0xf3efe8, { emissive: 0x8c877e }), BX, RH + 0.05, 0);
+  const bl = new THREE.PointLight(0xfff1dc, 2.3, 7, 1.4); bl.position.set(BX, 2.4, 0.2); scene.add(bl); roomLights.push([bl, 'bedroom', 2.3]);
+  const win = new THREE.Group(); win.position.set(BX - BW / 2 + 0.06, 1.55, 0.5); win.rotation.y = Math.PI / 2; scene.add(win);   // окно на левой стене (слово — у гостиной)
+  box(1.3, 1.1, 0.04, M(0xbfe3f5, { emissive: 0x6aa6c8, emissiveIntensity: 0.55 }), 0, 0, 0, win);
+  box(1.4, 0.07, 0.08, white, 0, 0.58, 0, win); box(1.4, 0.07, 0.08, white, 0, -0.58, 0, win); box(0.07, 1.16, 0.08, white, -0.68, 0, 0, win); box(0.07, 1.16, 0.08, white, 0.68, 0, 0, win);
+  doorway(BX + 1.8, BD / 2, true, 1, 0x8b5a3c, -1);   // проём в коридор
+}
+const C_ANNA = 0xd0487f, C_GIO = 0x2f62b0, C_I = 0x3f9a5c;   // цвета хозяев: Анна, Йоргос, я
+// кровать изголовьем к дальней стене, тумбочки по бокам: справа — Анны (слово), слева — Йоргоса (без слова)
+item('krevati', g => { g.position.set(BX, 0, -1.4);
+  box(1.78, 0.3, 2.1, wood2, 0, 0.15, 0, g); box(1.7, 0.16, 2.0, M(0xd8463f), 0, 0.38, 0.03, g); box(1.78, 0.75, 0.08, wood2, 0, 0.375, -1.01, g);
+  box(0.6, 0.1, 0.35, white, -0.42, 0.5, -0.78, g); box(0.6, 0.1, 0.35, white, 0.42, 0.5, -0.78, g); }, 0.9, [['bedDouble', { l: 2.1 }]]);
+const nsPrim = g => { box(0.38, 0.52, 0.5, wood2, 0, 0.26, 0, g); box(0.3, 0.12, 0.02, wood, 0, 0.36, 0.26, g); };
+item('komodino', g => { g.position.set(BX + 1.25, 0, -2.17); nsPrim(g); }, 0.95, [['cabinetBedDrawerTable', { l: 0.55, h: 0.52 }]]);
+decor(BX - 1.25, -2.17, nsPrim, [['cabinetBedDrawer', { l: 0.55, h: 0.52 }]], 'тумбочка Йоргоса');
+// комод у правой стены (мои вещи) и чемодан рядом; вешалка у двери; ковёр в ногах кровати; вентилятор под потолком
+decor(BX + 2.6, 0.3, g => box(0.65, 0.75, 0.9, wood2, 0, 0.375, 0, g), [['sideTableDrawers', { l: 0.9, h: 0.75, ry: -Math.PI / 2 }]], 'комод');
+decor(BX + 2.62, 1.15, g => box(0.3, 0.6, 0.4, M(0xb5653a), 0, 0.3, 0, g), [['item-luggage-upright', { h: 0.6, ry: -Math.PI / 2, tint: 0x9a6a3e, notex: true }]], 'чемодан');
+item('kremastra', g => { g.position.set(BX + 0.75, 0, 1.95); cyl(0.03, 0.03, 1.7, wood2, 0, 0.85, 0, g); cyl(0.25, 0.25, 0.03, wood2, 0, 0.015, 0, g); }, 1.95, [['coatRackStanding', { h: 1.75 }]]);
+item('chali', g => { g.position.set(BX, 0, 0.6); box(2.0, 0.012, 1.17, M(0x4f8a85), 0, 0.006, 0, g); }, 0.25, [['rugRectangle', { l: 2.0, tint: 0x4f8a85 }]]).userData.flat = true;
+const fan = item('anemistiras', g => { g.position.set(BX, 2.52, 0.35); cyl(0.07, 0.07, 0.12, white, 0, 0.2, 0, g);
+  for (let i = 0; i < 3; i++) { const b = new THREE.Group(); b.rotation.y = i * 2 * Math.PI / 3; box(0.48, 0.015, 0.1, wood2, 0.3, 0.13, 0, b); g.add(b); } }, 0.12, [['ceilingFan', { l: 1.1 }]]);
+item('kourtina', g => { g.position.set(BX - BW / 2 + 0.13, 0, 0.5); const fab = M(0x8f78b8);
+  for (const s of [-1, 1]) box(0.05, 1.75, 0.34, fab, 0, 1.3, s * 0.88, g);
+  const rod = cyl(0.015, 0.015, 2.2, metal, 0.02, 2.2, 0, g); rod.rotation.x = Math.PI / 2; }, 2.12);
+// на кровати: подушка и мишка у изголовья, плед в ногах, галстук Йоргоса с его стороны
+item('maxilari', g => { g.position.set(BX - 0.32, 0.75, -1.85); box(0.42, 0.4, 0.15, M(0xe8a03c), 0, 0.2, 0, g); }, 0.55, [['pillow', { l: 0.42, tint: 0xe8a03c }]]);
+item('arkoudaki', g => { g.position.set(BX + 0.42, 0.7, -1.85); const fur = M(0xa8713f), snout = M(0xe2c29a);
+  sph(0.085, fur, 0, 0.085, 0, g); sph(0.062, fur, 0, 0.215, 0.01, g); sph(0.024, fur, -0.05, 0.27, 0, g); sph(0.024, fur, 0.05, 0.27, 0, g);
+  sph(0.026, snout, 0, 0.205, 0.058, g); sph(0.008, dark, -0.022, 0.232, 0.055, g); sph(0.008, dark, 0.022, 0.232, 0.055, g);
+  sph(0.032, fur, -0.085, 0.11, 0.02, g); sph(0.032, fur, 0.085, 0.11, 0.02, g); sph(0.036, fur, -0.05, 0.03, 0.06, g); sph(0.036, fur, 0.05, 0.03, 0.06, g);
+  hit(g, 0.3, 0.36, 0.25, 0, 0.16, 0); }, 0.42);
+item('kouverta', g => { g.position.set(BX + 0.1, 0.6, -0.68); box(1.0, 0.07, 0.36, M(0xeadfca), 0, 0.035, 0, g); box(1.0, 0.012, 0.06, M(0x9a6b45), 0, 0.072, 0.1, g); }, 0.3);
+item('gravata-tou', g => { g.position.set(BX - 0.48, 0.62, -1.05); g.rotation.y = 0.35; const c = M(C_GIO), st = M(0x9fc0ea);
+  box(0.05, 0.016, 0.05, c, 0, 0.008, -0.2, g); box(0.045, 0.012, 0.2, c, 0, 0.006, -0.07, g); box(0.075, 0.012, 0.16, c, 0, 0.006, 0.1, g);
+  box(0.075, 0.004, 0.012, st, 0, 0.014, 0.06, g); box(0.075, 0.004, 0.012, st, 0, 0.014, 0.13, g); hit(g, 0.2, 0.12, 0.5, 0, 0.04, -0.02); }, 0.22);
+// мелкие вещи хозяев: телефон, очки (лежат, дужки назад), кошелёк — простые формы цвета хозяина
+function phone(id, x, z, col, ry) { return item(id, g => { g.position.set(x, 0.9, z); g.rotation.y = ry || 0;
+  box(0.078, 0.011, 0.155, M(col), 0, 0.0055, 0, g); box(0.066, 0.003, 0.135, dark, 0, 0.0125, 0, g); hit(g, 0.18, 0.12, 0.22, 0, 0.04, 0); }, 0.2); }
+function glasses(id, x, z, col) { return item(id, g => { g.position.set(x, 0.9, z); g.rotation.y = Math.PI / 2;   // дужки — к −x
+  const fr = M(col), lens = M(0xcfe4ee, { transparent: true, opacity: 0.55 });
+  for (const s of [-1, 1]) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.028, 0.006, 8, 20), fr); r.rotation.x = Math.PI / 2; r.position.set(s * 0.036, 0.006, 0); g.add(r);
+    cyl(0.025, 0.025, 0.003, lens, s * 0.036, 0.006, 0, g); box(0.006, 0.006, 0.11, fr, s * 0.063, 0.006, -0.06, g); }
+  box(0.02, 0.005, 0.005, fr, 0, 0.008, 0, g); hit(g, 0.18, 0.12, 0.2, 0, 0.04, -0.03); }, 0.2); }
+function wallet(id, x, z, col, ry) { return item(id, g => { g.position.set(x, 0.9, z); g.rotation.y = ry || 0;
+  box(0.115, 0.022, 0.09, M(col), 0, 0.011, 0, g); box(0.115, 0.004, 0.012, dark, 0, 0.024, 0.03, g); hit(g, 0.2, 0.12, 0.18, 0, 0.04, 0); }, 0.2); }
+// тумбочка Анны: будильник сзади, телефон слева, очки справа
+item('xypnitiri', g => { g.position.set(BX + 1.25, 0.9, -2.32); const red = M(0xc8372d);
+  const body = cyl(0.05, 0.05, 0.035, red, 0, 0.055, 0, g); body.rotation.x = Math.PI / 2;
+  const face = cyl(0.04, 0.04, 0.004, white, 0, 0.055, 0.019, g); face.rotation.x = Math.PI / 2;
+  sph(0.018, red, -0.03, 0.105, 0, g); sph(0.018, red, 0.03, 0.105, 0, g); box(0.012, 0.012, 0.012, dark, -0.03, 0.006, 0, g); box(0.012, 0.012, 0.012, dark, 0.03, 0.006, 0, g);
+  box(0.003, 0.025, 0.002, dark, 0, 0.066, 0.022, g); box(0.02, 0.003, 0.002, dark, 0.009, 0.055, 0.022, g); hit(g, 0.18, 0.18, 0.14, 0, 0.07, 0); }, 0.28);
+phone('kinito-tis', BX + 1.16, -2.03, C_ANNA);
+glasses('gyalia-tis', BX + 1.37, -2.05, C_ANNA);
+// тумбочка Йоргоса: кошелёк сзади, очки слева, телефон справа
+wallet('portofoli-tou', BX - 1.25, -2.3, 0x26364a);
+glasses('gyalia-tou', BX - 1.18, -2.05, 0x1c2f52);
+phone('kinito-tou', BX - 1.37, -2.03, C_GIO);
+// комод: мои вещи
+phone('kinito-mou', BX + 2.55, 0.12, C_I, 0.2);
+wallet('portofoli-mou', BX + 2.62, 0.52, 0xb07a44, -0.3);
+// люди — у стен, каждый со своей стороны: проходы вдоль кровати (1,4 м) остаются свободными (11.11: путь к тумбочке шёл впритирку к Йоргосу — камера в лицо)
+person(PEOPLE[4], BX + 2.25, -1.3, -0.5, C_ANNA, false, { model: 'character-female-f', h: 1.48, labelY: 1.72 });
+person(PEOPLE[5], BX - 2.25, -1.3, 0.5, C_GIO, false, { model: 'character-male-f', h: 1.52, labelY: 1.76 });
+// ---------- коридор (12.11, бесшовный дом): вдоль южных стен гостиной, кухни и спальни; из него — проёмы во все три комнаты ----------
+const HZ0 = BD / 2, HZ1 = 5.0, HX = KX + KW / 2;   // коридор z 2,5…5, x −9,6…9,6 (у гостиной — от её стены z 3)
+buildRoom = 'hall';
+{
+  const hf = M(0xb9a07c), wH = M(0xe6e0d4);
+  for (const [x0, x1, z0] of [[-HX, -RW / 2, HZ0], [-RW / 2, RW / 2, RD / 2], [RW / 2, HX, HZ0]]) {
+    const f = box(x1 - x0, 0.1, HZ1 - z0, hf, (x0 + x1) / 2, -0.05, (z0 + HZ1) / 2); f.userData.floor = true; f.userData.room = 'hall'; floors.push(f);
+    box(x1 - x0, 0.1, HZ1 - z0, M(0xf3efe8, { emissive: 0x8c877e }), (x0 + x1) / 2, RH + 0.05, (z0 + HZ1) / 2);
+  }
+  box(2 * HX + 0.1, RH, 0.1, wH, 0, RH / 2, HZ1);   // южная стена (снаружи — к улице)
+  box(0.1, RH, HZ1 - HZ0, wH, -HX - 0.05, RH / 2, (HZ0 + HZ1) / 2);   // западный торец (восточный — стена дома во дворе)
+  for (const sx of [-1, 1]) box(0.1, RH, RD / 2 - HZ0, wH, sx * (RW / 2 + 0.05), RH / 2, (HZ0 + RD / 2) / 2);   // уступы между гостиной и кухней / спальней
+  for (const x of [-5.2, 5.2]) { const l = new THREE.PointLight(0xfff1dc, 1.8, 7, 1.4); l.position.set(x, 2.5, 3.9); scene.add(l); roomLights.push([l, 'hall', 1.8]); }
+}
+deco(0, 3.95, g => box(14, 0.012, 0.9, M(0x7f4f46), 0, 0.006, 0, g), 'дорожка коридора').userData.flat = true;
+for (const [x, c] of [[-6.2, 0x4f7fa8], [0, 0xd08a3c], [6.2, 0x5f9a62]])   // картинки на стене — без слова
+  deco(x, HZ1 - 0.06, g => { box(0.9, 0.62, 0.03, M(0x6b4a2e), 0, 1.6, 0, g); box(0.78, 0.5, 0.03, M(c), 0, 1.6, -0.012, g); sph(0.09, M(0xf2e3c6), -0.15, 1.65, -0.03, g); }, 'картинка ' + x).userData.outside = true;
+decor(-8.9, 4.45, g => { cyl(0.2, 0.15, 0.35, M(0xb5653c), 0, 0.175, 0, g); sph(0.25, M(0x3f8f4a), 0, 0.6, 0, g); }, [['pottedPlant', { h: 0.95 }]], 'растение коридора');
+
+// ---------- улица и море (12.11: «сходить на улицу, посмотреть αυτοκίνητο, машины, дверь, окно… сходить на море, автобус, остановка, дорога») ----------
+// Калитка в южном заборе двора → улица. Дом с садом и аптека, дорога с переходом и светофором, машина, такси, автобус у остановки,
+// набережная с кафе, пляж и море до горизонта (туман цвета неба). Модели — Kenney CC0: Car Kit, City Kit Roads / Suburban / Commercial, Cube Pets,
+// Watercraft Kit (models/cars, roads, suburb, shops, pets, boats + LICENSE-kenney-*); автобус, остановка, велосипед, шезлонг — простые формы в той же гамме.
+// Квест Πέτρος «Πάμε σε + артикль» (узор 3.3 ston-sti-sto, ν — 3.5): Πάμε στη στάση / στο φαρμακείο / στον κήπο / στην παραλία / στη θάλασσα — Петрос идёт следом.
+const SX = 150, SCZ = 1.5, SW = 18, SD = 19;   // местные координаты улицы: x 141…159, z −8…11; дома — за z 11 (outside), море — за z −8
+// 12.11, бесшовный мир: улица — к югу от двора, её калитка (x' 157,4, z' 11) совпадает с калиткой двора (YGX, YGZ); строится в группе, повёрнутой на 180°
+// (море — дальше от дома). Мировые координаты из местных: SW_(x', z'); люди (Петрос) стоят в мировых.
+const YGZ = YD / 2 - 0.1, SXW = YGX + 7.4, SZW = YGZ + 11;
+const streetRoot = new THREE.Group(); streetRoot.position.set(SXW + SX, 0, SZW); streetRoot.rotation.y = Math.PI; scene.add(streetRoot); ROOT = streetRoot;
+const SW_ = (x, z) => [SXW + SX - x, SZW - z];
+buildRoom = 'street';
+const pave = M(0xc9c4ba), prom = M(0xe2d5bb), sandM = M(0xe9d29a), seaM = M(0x2f8fc4, { emissive: 0x0e4466, emissiveIntensity: 0.45 });
+{
+  const sf = box(SW + 0.2, 0.1, SD + 0.2, pave, SX, -0.05, SCZ); sf.userData.floor = true; sf.userData.room = 'street'; floors.push(sf);
+  const pr = box(60, 0.012, 3.6, prom, SX, 0.006, 1.2); pr.userData.floor = true; pr.userData.room = 'street'; floors.push(pr);   // набережная z −0,6…3
+  box(60, 0.05, 0.18, M(0xbfb39b), SX, 0.025, -0.62);   // бордюр набережной
+}
+// дорога вдоль x (z 3…7): плитка Kenney 1 × 1 → 4 м, переход — напротив калитки (x' 158): калитка → переход → пляж → море по прямой
+const RZ = 5.0, ROADY = 0.02;
+item('dromos', g => { g.position.set(SX, 0, RZ); box(44, 0.02, 4, M(0x4a4f5a), 0, 0.01, 0, g); }, 0.35,
+  Array.from({ length: 11 }, (_, i) => ['roads/' + (i === 7 ? 'road-crossing' : 'road-straight'), { l: 4, h: 0.02, x: (i - 5) * 4, ry: Math.PI / 2 }])).userData.flat = true;
+objects[objects.length - 1].userData.outside = true;   // дорога, пляж и море уходят за края зоны
+// дома на северной стороне: аптека (слово), наш дом с садом и балконом (слова), калитка во двор, соседи (декор)
+const FRONT_Z = 11.0;
+item('farmakeio', g => { g.position.set(SX - 5.8, 0, FRONT_Z); box(5.6, 6.2, 5.0, M(0xe8e4dc), 0, 3.1, 2.5, g); }, 3.15,
+  [['shops/building-a', { l: 5.6, h: 6.4, z: 2.8, ry: Math.PI }]]).userData.outside = true;
+{ const cross = new THREE.Group(); cross.position.set(1.6, 3.0, -0.32); objects[objects.length - 1].add(cross);   // зелёный крест аптеки — как в Греции и на Кипре
+  const gm = M(0x22b14c, { emissive: 0x158a35, emissiveIntensity: 0.9 }); box(0.62, 0.2, 0.08, gm, 0, 0, 0, cross); box(0.2, 0.62, 0.08, gm, 0, 0, 0, cross);
+  box(0.05, 0.05, 0.3, metal, 0, 0, 0.17, cross); }
+item('spiti', g => { g.position.set(SX + 2.2, 0, FRONT_Z); box(7.0, 5.0, 6.0, M(0xf0ece4), 0, 2.5, 3.0, g); }, 4.6,
+  [['suburb/building-type-p', { l: 7.2, h: 5.4, z: 3.4, ry: Math.PI }]]).userData.outside = true;
+item('mpalkoni', g => { g.position.set(SX + 0.6, 2.75, FRONT_Z + 0.13); const rl = M(0xf5f5f2);   // вплотную к фасаду (фасад модели — z 11,53)
+  box(2.4, 0.12, 0.8, M(0xd9d4cb), 0, 0, 0, g); box(2.4, 0.05, 0.05, rl, 0, 0.95, -0.38, g);
+  for (let i = 0; i <= 8; i++) box(0.035, 0.9, 0.035, rl, -1.18 + i * 0.295, 0.5, -0.38, g);
+  for (const s of [-1, 1]) { box(0.05, 0.05, 0.8, rl, s * 1.18, 0.95, 0, g); box(0.035, 0.9, 0.035, rl, s * 1.18, 0.5, 0, g); }
+  cyl(0.11, 0.08, 0.2, M(0xb5653a), 0.85, 0.16, -0.12, g); sph(0.17, M(0x4f8f3a), 0.85, 0.38, -0.12, g); }, 1.35);
+item('kipos', g => { g.position.set(SX + 0.4, 0, 10.0);   // сад перед домом: газон, низкий заборчик, цветы, деревце
+  box(3.8, 0.04, 1.75, M(0x6fae4c), 0, 0.02, 0, g); }, 1.2);
+{ const kp = objects[objects.length - 1];
+  keep(kp, [...[-1.5, -0.5, 0.5, 1.5].map(x => ['suburb/fence-low', { l: 1.0, x, z: -0.86 }]), ['suburb/fence-low', { l: 1.0, x: -1.88, z: -0.35, ry: Math.PI / 2 }],
+    ['suburb/fence-low', { l: 1.0, x: 1.88, z: -0.35, ry: Math.PI / 2 }], [NAT + 'tree_default', { h: 2.3, x: -1.2, z: 0.35 }],
+    [NAT + 'flower_redA', { h: 0.42, x: 0.0, z: -0.25 }], [NAT + 'flower_yellowA', { h: 0.42, x: 0.45, z: -0.3 }], [NAT + 'flower_purpleA', { h: 0.42, x: 0.9, z: -0.2 }],
+    [NAT + 'flower_redB', { h: 0.42, x: 1.35, z: -0.3 }], [NAT + 'plant_bush', { h: 0.55, x: 1.3, z: 0.45 }], [NAT + 'grass', { l: 0.4, x: -0.3, z: 0.4 }]]); }
+decor(SX - 13.6, FRONT_Z, g => box(7, 6, 6, M(0xe1dbd0), 0, 3, 3, g), [['shops/building-e', { l: 7.0, h: 5.2, z: 3.4, ry: Math.PI }]], 'соседний дом запад').userData.outside = true;
+// светофор у перехода, машины у тротуара, автобус у остановки
+item('fanari', g => { g.position.set(SX + 5.55, 0, 7.45); cyl(0.05, 0.05, 2.6, M(0x5a6070), 0, 1.3, 0, g); box(0.22, 0.6, 0.2, dark, 0, 2.5, 0, g); }, 3.05,
+  [['roads/traffic-light', { h: 2.9, ry: Math.PI }]]);
+item('aftokinito', g => { g.position.set(SX + 2.8, ROADY, 6.05); box(3.6, 1.2, 1.7, M(0xd8402e), 0, 0.6, 0, g); }, 1.85, [['cars/sedan', { l: 3.6, ry: Math.PI / 2 }]]);
+item('taxi', g => { g.position.set(SX - 6.2, ROADY, 6.15); box(3.7, 1.3, 1.7, M(0xf0b429), 0, 0.65, 0, g); }, 1.95, [['cars/taxi', { l: 3.7, ry: Math.PI / 2 }]]);   // у тротуара за машиной
+item('leoforeio', g => { g.position.set(SX - 4.5, ROADY, 3.8);   // 12.11: в стороне от прохода калитка → море   // автобус: кузов простыми формами, колёса Kenney
+  const body = M(0xf2a516), glass = M(0x23394d, { emissive: 0x0e1c28 }), roof = M(0xf5f5f2);
+  box(6.0, 2.3, 2.1, body, 0, 1.45, 0, g); box(5.9, 0.16, 2.0, roof, 0, 2.68, 0, g); box(6.02, 0.3, 2.12, M(0x2b5d8f), 0, 0.5, 0, g);
+  box(4.9, 0.85, 2.14, glass, 0.35, 1.85, 0, g); box(0.06, 1.1, 1.8, glass, -3.0, 1.75, 0, g); box(0.06, 0.95, 1.8, glass, 3.0, 1.85, 0, g);
+  box(0.9, 1.7, 0.04, glass, -2.1, 1.25, -1.06, g); box(0.9, 1.7, 0.04, glass, 1.0, 1.25, -1.06, g);   // двери — к остановке (z−)
+  box(0.04, 0.2, 0.5, M(0xfff3c4, { emissive: 0xffe08a, emissiveIntensity: 0.8 }), -3.02, 0.75, 0.65, g); box(0.04, 0.2, 0.5, M(0xfff3c4, { emissive: 0xffe08a, emissiveIntensity: 0.8 }), -3.02, 0.75, -0.65, g);
+  box(0.04, 0.32, 1.1, M(0x111820), -3.02, 2.42, 0, g); }, 3.05);
+keep(objects[objects.length - 1], [-2.1, 2.0].flatMap(x => [-1, 1].map(s => ['cars/wheel-default', { h: 0.78, x, z: s * 0.98, y: 0, ry: s * Math.PI / 2 }])));
+// набережная: остановка, кафе, велосипед, фонари, пальмы
+item('stasi', g => { g.position.set(SX - 4.4, 0, 1.95);   // навес лицом к дороге (z+), скамья, знак
+  const post = M(0x8a93a0), roofM = M(0x2f6fb0), gl = M(0xcfe4ee, { transparent: true, opacity: 0.45 });
+  for (const [x, z] of [[-1.15, -0.45], [1.15, -0.45], [-1.15, 0.4], [1.15, 0.4]]) cyl(0.04, 0.04, 2.3, post, x, 1.15, z, g);
+  box(2.6, 0.1, 1.2, roofM, 0, 2.33, 0, g); box(2.3, 1.5, 0.03, gl, 0, 1.15, -0.45, g);
+  box(1.7, 0.06, 0.38, wood2, 0, 0.46, -0.22, g); for (const x of [-0.7, 0.7]) box(0.05, 0.44, 0.3, post, x, 0.22, -0.22, g);
+  cyl(0.035, 0.035, 2.6, post, 1.55, 1.3, 0.3, g); const sg = cyl(0.26, 0.26, 0.04, M(0x2563c4), 1.55, 2.45, 0.3, g, 28); sg.rotation.x = Math.PI / 2;
+  box(0.26, 0.15, 0.05, white, 1.55, 2.47, 0.33, g); box(0.2, 0.05, 0.055, M(0x2563c4), 1.55, 2.44, 0.335, g); }, 2.7);
+item('kafeteria', g => { g.position.set(SX + 2.3, 0, 1.1);   // киоск-стойка с навесом и два столика с зонтами
+  box(1.5, 1.05, 0.75, white, -1.5, 0.52, -0.9, g); box(1.6, 0.06, 0.85, M(0x8b5a3c), -1.5, 1.08, -0.9, g); box(1.5, 0.9, 0.06, M(0x3e8d6b), -1.5, 2.15, -0.5, g);
+  for (const x of [-2.2, -0.8]) cyl(0.03, 0.03, 1.6, metal, x, 1.85, -1.2, g); box(1.6, 0.06, 0.9, M(0x3e8d6b), -1.5, 2.62, -0.85, g); }, 2.85);
+keep(objects[objects.length - 1], [['shops/detail-parasol-a', { h: 2.1, x: 0.25, z: 0.3 }], ['shops/detail-parasol-a', { h: 2.1, x: 1.9, z: -0.4 }],
+  ['chair', { h: 0.9, x: 0.25, z: 1.0, ry: Math.PI }], ['chair', { h: 0.9, x: -0.45, z: 0.3, ry: Math.PI / 2 }], ['chair', { h: 0.9, x: 1.9, z: 0.3, ry: Math.PI }], ['chair', { h: 0.9, x: 2.6, z: -0.4, ry: -Math.PI / 2 }]]);
+item('podilato', g => { g.position.set(SX - 2.4, 0, 0.05); const fr = M(0x2b6cb0), tire = M(0x1d232b);   // велосипед вдоль набережной
+  for (const x of [-0.5, 0.5]) { const w = new THREE.Mesh(new THREE.TorusGeometry(0.31, 0.035, 8, 24), tire); w.position.set(x, 0.345, 0); g.add(w);
+    const hub = cyl(0.03, 0.03, 0.08, metal, x, 0.345, 0, g); hub.rotation.x = Math.PI / 2; }
+  const bar = (x1, y1, x2, y2) => { const l = Math.hypot(x2 - x1, y2 - y1), m = cyl(0.025, 0.025, l, fr, (x1 + x2) / 2, (y1 + y2) / 2, 0, g, 8); m.rotation.z = Math.atan2(x1 - x2, y2 - y1); };
+  bar(-0.5, 0.33, -0.05, 0.36); bar(-0.05, 0.36, 0.35, 0.72); bar(-0.05, 0.36, -0.15, 0.78); bar(-0.15, 0.78, 0.35, 0.72); bar(-0.5, 0.33, -0.15, 0.78); bar(0.5, 0.33, 0.35, 0.72);
+  bar(0.35, 0.72, 0.38, 0.92); box(0.05, 0.03, 0.42, dark, 0.38, 0.93, 0, g); box(0.22, 0.05, 0.1, dark, -0.17, 0.81, 0, g);
+  hit(g, 1.3, 0.95, 0.4, 0, 0.47, 0); }, 1.15);
+for (const [x, z] of [[-1.3, 2.3], [5.6, 2.5]]) decor(SX + x, z, g => { cyl(0.04, 0.05, 4.0, M(0x6b7280), 0, 2.0, 0, g); box(0.06, 0.06, 1.0, M(0x6b7280), 0, 3.95, 0.5, g); },
+  [['roads/light-curved', { h: 4.2, ry: Math.PI }]], 'фонарь ' + x).userData.trunk = 0.12;
+for (const [x, z, h] of [[1.1, -1.5, 4.4], [6.6, -1.7, 4.0], [-11.2, -0.4, 4.6], [11.8, -0.5, 4.2], [-15, -1.2, 3.8], [16, -1.0, 4.4]]) {   // на пляже; дальние — за краем зоны
+  const pg = decor(SX + x, z, g => { cyl(0.12, 0.16, h * 0.85, M(0x9a7a50), 0, h * 0.42, 0, g); sph(0.7, M(0x4f8f3a), 0, h, 0, g); }, [[NAT + 'tree_palmTall', { h }]], 'пальма ' + x);
+  pg.userData.trunk = 0.22; if (Math.abs(x) > 9) pg.userData.outside = true; }
+// путь к морю без подсказок (12.11: «непонятно, как на улицу попасть на море»): от калитки — стрелки на тротуаре и набережной, переход,
+// мостки по песку до воды; у калитки — указатель «η θάλασσα» с волной и стрелкой (слово улицы, street/texts.txt)
+const PATH_X = SX + 7.7;
+for (const z of [9.4, 8.1, 2.1, 0.7]) deco(PATH_X, z, g => { for (const s of [-1, 1]) { const b = box(0.62, 0.012, 0.13, M(0xf3d36b), s * 0.2, 0.017, 0.12, g); b.rotation.y = -s * 0.75; } }, 'стрелка ' + z).userData.flat = true;
+deco(PATH_X, -4.1, g => { for (let i = 0; i < 14; i++) box(1.15, 0.03, 0.22, M(0xb88a58), 0, 0.027, 3.15 - i * 0.5, g); for (const sx of [-0.5, 0.5]) box(0.08, 0.035, 6.8, M(0x8a6440), sx, 0.02, -0.1, g); }, 'мостки').userData.flat = true;
+{ const cv = document.createElement('canvas'); cv.width = 512; cv.height = 256; const c = cv.getContext('2d');
+  c.fillStyle = '#f7f4ec'; c.fillRect(0, 0, 512, 256); c.strokeStyle = '#2f6fb0'; c.lineWidth = 10; c.strokeRect(8, 8, 496, 240);
+  c.fillStyle = '#1d3b5c'; c.beginPath(); c.moveTo(70, 40); c.lineTo(118, 108); c.lineTo(86, 108); c.lineTo(86, 150); c.lineTo(54, 150); c.lineTo(54, 108); c.lineTo(22, 108); c.closePath(); c.fill();   // стрелка «вперёд»
+  c.font = '600 62px system-ui, "Noto Sans", "DejaVu Sans", sans-serif'; c.textBaseline = 'middle'; c.fillText('η θάλασσα', 145, 92);
+  c.strokeStyle = '#2f86c9'; c.lineWidth = 9; c.lineCap = 'round';
+  for (const y of [176, 212]) { c.beginPath(); for (let x = 40; x <= 470; x += 4) { const v = y + Math.sin((x - 40) / 34) * 9; x === 40 ? c.moveTo(x, v) : c.lineTo(x, v); } c.stroke(); }   // волна
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  deco(SX + 6.2, 10.15, g => { cyl(0.05, 0.05, 1.9, M(0x6b4a2e), 0, 0.95, 0, g); const b = box(1.1, 0.55, 0.05, M(0xffffff, { map: tex }), 0, 1.75, 0.04, g); b.rotation.y = Math.PI; }, 'указатель к морю').userData.trunk = 0.08; }
+// пляж (z −8…−0,6) и море до горизонта; пена у берега ходит туда-сюда
+Object.assign(item('paralia', g => { g.position.set(SX, 0, -3.6); box(60, 0.012, 7.8, sandM, 0, 0.006, -0.8, g); }, 0.35).userData, { flat: true, outside: true });
+Object.assign(item('thalassa', g => { g.position.set(SX, 0, -8.05); box(150, 0.02, 64, seaM, 0, 0.01, -31.9, g); }, 0.55).userData, { flat: true, outside: true });
+const foam = box(60, 0.004, 0.45, M(0xf4fbff, { transparent: true, opacity: 0.75 }), SX, 0.024, -8.0); foam.userData.room = 'street';
+item('xaplostra', g => { g.position.set(SX + 3.4, 0.012, -4.3); const fr = M(0xf5f5f2), cu = M(0x2f86c9);   // шезлонг под зонтом
+  box(0.66, 0.08, 1.3, cu, 0, 0.32, 0.25, g); const back = box(0.66, 0.08, 0.7, cu, 0, 0.5, -0.62, g); back.rotation.x = -0.55;
+  for (const [x, z] of [[-0.3, 0.8], [0.3, 0.8], [-0.3, -0.4], [0.3, -0.4]]) box(0.04, 0.3, 0.04, fr, x, 0.15, z, g);
+  cyl(0.025, 0.025, 2.2, fr, 0.62, 1.1, -0.2, g); cyl(0.03, 1.15, 0.42, M(0xe8554a), 0.62, 2.1, -0.2, g, 10);
+  cyl(0.02, 0.85, 0.3, white, 0.62, 2.26, -0.2, g, 10); }, 0.75);
+item('ammos', g => { g.position.set(SX - 3.6, 0.012, -5.2); const s2 = M(0xd8bd7c);   // горка песка, ведёрко и совок
+  const h = sph(0.6, s2, 0, 0, 0, g); h.scale.set(1.0, 0.42, 0.85); cyl(0.11, 0.08, 0.2, M(0xd8402e), 0.75, 0.1, 0.25, g);
+  box(0.05, 0.02, 0.32, M(0x2f86c9), 0.55, 0.03, -0.45, g); box(0.14, 0.02, 0.12, M(0x2f86c9), 0.55, 0.03, -0.66, g); }, 0.6);
+item('varka', g => { g.position.set(SX - 6.4, 0, -8.7); box(1.2, 0.4, 2.6, M(0xc97a3d), 0, 0.2, 0, g); }, 0.9, [['boats/boat-row-small', { l: 2.6, ry: 0.35 }]]).userData.outside = true;
+Object.assign(decor(SX + 16, -44, g => box(12, 4, 3, white, 0, 2, 0, g), [['boats/ship-ocean-liner-small', { l: 14, ry: Math.PI / 2 }]], 'корабль на горизонте').userData, { outside: true, flat: true });
+for (const [x, y, z] of [[-10, 9, -34], [12, 11, -40], [2, 10, -46]]) deco(SX + x, z, g => { const c = M(0xffffff, { emissive: 0xdde8f0, emissiveIntensity: 0.6 });
+  sph(2.2, c, 0, y, 0, g); sph(1.7, c, 2.2, y - 0.4, 0.2, g); sph(1.6, c, -2.2, y - 0.5, 0, g); }, 'облако ' + x).userData.outside = true;
+// пёс на пляже (Cube Pets, анимация покоя)
+const pets = [];
+item('skylos', g => { g.position.set(SX - 2.2, 0.012, -2.9); g.rotation.y = 0.6; box(0.32, 0.3, 0.5, M(0xc77b3a), 0, 0.3, 0, g); box(0.26, 0.24, 0.24, M(0xc77b3a), 0, 0.52, 0.28, g);
+  hit(g, 0.55, 0.7, 0.7, 0, 0.35, 0); }, 0.85);
+{ const dg = objects[objects.length - 1];
+  kitJobs.push(loadKit('pets/animal-dog').then(gl => { const root = gl.scene, wrap = new THREE.Group(); wrap.add(root); lambert(root); fit(root, wrap, { h: 0.62 });
+    for (const c of [...dg.children]) if (c.material !== hitM) dg.remove(c);
+    const mx = new THREE.AnimationMixer(root), a = mx.clipAction(THREE.AnimationClip.findByName(gl.animations, 'idle')); a.timeScale = 0.6; a.play(); pets.push(mx); dg.add(wrap); },
+    e => console.warn('пёс не загрузился', e))); }
+// Πέτρος — у калитки; в квесте идёт следом за игроком
+ROOT = scene;
+const PETROS_HOME = (([x, z]) => ({ x, z }))(SW_(SX + 5.0, 9.6));   // сбоку от калитки — не загораживает вид входящему (мировые координаты)
+person(PEOPLE[6], PETROS_HOME.x, PETROS_HOME.z, -2.4 + Math.PI, 0x3f7fbf, false, { model: 'character-male-e', h: 1.5, labelY: 1.75 });
+buildRoom = 'living';
+
+
+// ---------- подписи над предметами ----------
+const labelsEl = document.getElementById('labels');
+const labels = new Map();
+function mkLabel(key) { const d = document.createElement('div'); d.className = 'lab'; labelsEl.appendChild(d); labels.set(key, d); return d; }
+for (const g of objects) mkLabel(g.userData.word);
+for (const g of people) mkLabel('p:' + g.userData.person).classList.add('char');
+
+// ---------- режим ----------
+let mode = 'look';
+const recalled = new Map(); // id -> true/false
+function wordHTML(w) {
+  const c = t => `<span style="color:var(--${w.g})">${t}</span>`;
+  return `${c(w.a)} ${w.adj ? w.adj[0] + c(w.adj[1]) + ' ' : ''}${w.s}${c(w.e)}${w.pos ? ' ' + w.pos : ''}`;   // pos — «чей» (μου, του, της) после слова, без цвета рода
+}
+function refreshLabels() {
+  for (const g of objects) {
+    const w = byId[g.userData.word], d = labels.get(w.id);
+    if (mode === 'look') { d.innerHTML = wordHTML(w); d.className = 'lab'; }
+    else { const r = recalled.get(w.id); d.textContent = r === undefined ? '?' : (r ? '✓' : '↺'); d.className = 'lab q' + (r === undefined ? '' : ' done'); }
+  }
+  for (const g of people) { const p = PEOPLE.find(x => x.id === g.userData.person); labels.get('p:' + p.id).textContent = '💬 ' + p.name; }
+  const sc = document.getElementById('score');
+  if (mode === 'recall' && roomWords().length) { const rw = roomWords(), ok = rw.filter(w => recalled.get(w.id)).length; sc.textContent = `вспомнил ${ok} из ${rw.length}`; sc.style.display = 'inline'; }
+  else sc.style.display = 'none';
+}
+function setMode(m) {
+  mode = m; closeCard();
+  document.getElementById('mLook').classList.toggle('on', m === 'look');
+  document.getElementById('mRecall').classList.toggle('on', m === 'recall');
+  document.getElementById('mQuest').classList.toggle('on', m === 'quest');
+  if (m === 'recall') recalled.clear();
+  document.body.classList.toggle('recall', m === 'recall');
+  document.body.classList.toggle('quest', m === 'quest');
+  if (m === 'quest') qStart(); else qStop();
+  refreshLabels(); log('mode', { mode: m });
+}
+document.getElementById('mLook').onclick = () => setMode('look');
+document.getElementById('mRecall').onclick = () => setMode('recall');
+document.getElementById('mQuest').onclick = () => setMode('quest');
+
+// ---------- звук ----------
+const audio = new Audio();
+const played = [];   // ?rec=1: что и когда зазвучало (время записи) — mux_1111.py кладёт звук по этим отметкам
+function play(src, inSeq) { if (REC && !inSeq) played.push({ t: recNow, list: [src] }); try { audio.onended = null; audio.pause(); audio.src = /^https?:/.test(src) ? src : AUDIO_BASE + src; audio.currentTime = 0; audio.play().catch(() => {}); } catch (e) {} }
+let seqTok = 0;
+function playSeq(list) { if (REC) played.push({ t: recNow, list: [...list] }); const tok = ++seqTok; let i = 0; const next = () => { if (tok !== seqTok || i >= list.length) return; play(list[i++], true); audio.onended = next; }; next(); }
+const wordSrc = w => (w.room && w.room !== 'living' ? w.room + '/' : '') + `audio/${w.id}.mp3`;
+const lineSrc = (id, v) => `${COURSE_AUDIO}${id}-${v || 'athina'}.mp3`;
+
+// ---------- карточка ----------
+const card = document.getElementById('card');
+function closeCard() { card.style.display = 'none'; card.innerHTML = ''; for (const d of labels.values()) d.classList.remove('sel'); }
+function courseBlock(line, voice) {
+  if (!line) return '';
+  return `<div class="course"><div class="cap">строка из прописи</div><div class="gr">${line.gr}</div>${line.ru ? `<div class="tr">${line.ru}</div>` : ''}
+    <div class="row"><button class="btn" data-play="${lineSrc(line.id, voice)}">▶ послушать</button>
+    <a class="btn" href="https://easygreek.app/greek/propis/?w=${encodeURIComponent(line.id)}" target="_blank" rel="noopener">✍ написать в прописи</a></div></div>`;
+}
+function openWord(w) {
+  if (mode === 'look') {
+    card.innerHTML = `<button class="x" aria-label="закрыть">×</button>
+      <div class="mark" style="color:var(--${w.g})">${markOf(w)}</div><div class="word">${wordHTML(w)}</div><div class="ru">${w.ru}</div>
+      <div class="row"><button class="btn primary" data-play="${wordSrc(w)}">▶ ещё раз</button></div>${courseBlock(w.line)}`;
+    card.style.display = 'block'; play(wordSrc(w)); log('word', { item: w.id });
+  } else {
+    if (recalled.has(w.id)) { // уже отмечено — показать слово для повторения
+      card.innerHTML = `<button class="x" aria-label="закрыть">×</button><div class="mark" style="color:var(--${w.g})">${markOf(w)}</div><div class="word">${wordHTML(w)}</div><div class="ru">${w.ru}</div>
+        <div class="row"><button class="btn" data-play="${wordSrc(w)}">▶ послушать</button></div>`;
+      card.style.display = 'block'; return;
+    }
+    // вспоминание: ответ не светится — ни слова, ни звука, ни перевода до «Показать»
+    // русское слово — подсказка «какой предмет», не ответ: вспоминается греческое
+    closeCard(); labels.get(w.id).classList.add('sel');
+    card.innerHTML = `<button class="x" aria-label="закрыть">×</button><div class="ru" style="font-size:18px;color:var(--text);margin:6px 0 12px">Как по-гречески «${w.ru}»? Скажи или напиши про себя.</div>
+      <div class="row"><button class="btn primary" id="show">Показать</button></div>`;
+    card.style.display = 'block';
+    card.querySelector('#show').onclick = () => {
+      card.innerHTML = `<button class="x" aria-label="закрыть">×</button><div class="mark" style="color:var(--${w.g})">${markOf(w)}</div><div class="word">${wordHTML(w)}</div><div class="ru">${w.ru}</div>
+        <div class="row"><button class="btn ok" id="yes">✓ вспомнил</button><button class="btn" id="no">↺ не вспомнил</button></div>`;
+      play(wordSrc(w));
+      const mark = ok => { recalled.set(w.id, ok); log('recall', { item: w.id, ok }); closeCard(); refreshLabels();
+        if (roomWords().every(x => recalled.has(x.id))) finish(); };
+      card.querySelector('#yes').onclick = () => mark(true);
+      card.querySelector('#no').onclick = () => mark(false);
+    };
+  }
+}
+function openPerson(p) {
+  card.innerHTML = `<button class="x" aria-label="закрыть">×</button><div class="who">${p.name}</div><div class="say">${p.line.gr}</div>
+    ${p.line.ru ? `<div class="ru">${p.line.ru}</div>` : ''}<div class="row"><button class="btn primary" data-play="${lineSrc(p.line.id, p.voice)}">▶ ещё раз</button>
+    <a class="btn" href="https://easygreek.app/greek/propis/?w=${encodeURIComponent(p.line.id)}" target="_blank" rel="noopener">✍ написать в прописи</a></div>`;
+  card.style.display = 'block'; play(lineSrc(p.line.id, p.voice)); log('person', { who: p.id });
+}
+card.addEventListener('click', e => {
+  const b = e.target.closest('[data-play]'); if (b) { play(b.dataset.play); return; }
+  if (e.target.closest('.x')) closeCard();
+});
+function finish() {
+  const rw = roomWords(), ok = rw.filter(w => recalled.get(w.id)).length;
+  document.getElementById('doneN').textContent = `${ok} из ${rw.length}`;
+  document.getElementById('done').style.display = 'block'; log('finish', { ok, n: rw.length });
+}
+document.getElementById('again').onclick = () => { document.getElementById('done').style.display = 'none'; setMode('recall'); };
+document.getElementById('toLook').onclick = () => { document.getElementById('done').style.display = 'none'; setMode('look'); };
+
+// ---------- управление ----------
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const pickables = [...objects, ...people, ...floors];
+function pick(cx, cy) {
+  ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects(pickables, true);
+  for (const h of hits) {
+    let o = h.object, unit = null;
+    while (o && !o.userData.word && !o.userData.person && !o.userData.floor) { if (o.userData.unit && !unit) unit = o; o = o.parent; }
+    if (!o || o.visible === false || (unit && unit.visible === false) || roomOf(o) !== room) continue;   // взятое и другая комната — мимо
+    return { o, point: h.point, unit };
+  }
+  return null;
+}
+const clamp = (v, a) => Math.max(-a, Math.min(a, v));
+const clampX = v => { const R = ROOMS[room]; return R.cx + clamp(v - R.cx, R.w / 2 - WALL_M); };
+const clampZ = v => { const R = ROOMS[room]; return R.cz + clamp(v - R.cz, R.d / 2 - WALL_M); };
+// комнаты (12.11 — один бесшовный дом): границы, проёмы и куда встаёшь, войдя по кнопке-ярлыку.
+// Проём: x, z — середина на плоскости стены; n — ось нормали ('z' — стена вдоль x); to — куда ведёт проём пешком; btn и label — кнопка-ярлык у проёма
+// (из гостиной — сразу в кухню или спальню, минуя коридор). Каждый проём описан у обеих комнат.
+const WALL_M = 0.3, DOOR_HALF = DOOR_W / 2 - 0.2, DOOR_DEPTH = 1.0;
+const ROOMS = {
+  living: { name: 'гостиная', cx: 0, cz: 0, w: RW, d: RD, doors: [
+      { x: 1.9, z: RD / 2, n: 'z', to: 'hall', btn: 'kitchen', label: '→ Кухня' }, { x: -2.0, z: RD / 2, n: 'z', to: 'hall', btn: 'bedroom', label: '→ Спальня' }],
+    spawn: { x: 1.9, z: 1.9, yaw: 0 }, from: { bedroom: { x: -2.0, z: 1.9, yaw: 0 } } },
+  hall: { name: 'коридор', cx: 0, cz: (RD / 2 + HZ1) / 2, w: 2 * HX, d: HZ1 - RD / 2, doors: [
+      { x: 1.9, z: RD / 2, n: 'z', to: 'living', btn: 'living', label: '→ Гостиная' }, { x: -2.0, z: RD / 2, n: 'z', to: 'living', btn: 'living', label: '→ Гостиная' },
+      { x: KX + 1.8, z: KD / 2, n: 'z', to: 'kitchen', btn: 'kitchen', label: '→ Кухня' }, { x: BX + 1.8, z: BD / 2, n: 'z', to: 'bedroom', btn: 'bedroom', label: '→ Спальня' }],
+    spawn: { x: 0, z: 4.0, yaw: -Math.PI / 2 } },
+  kitchen: { name: 'кухня', cx: KX, cz: 0, w: KW, d: KD, doors: [
+      { x: KX + 1.8, z: KD / 2, n: 'z', to: 'hall', btn: 'living', label: '→ Гостиная' }, { x: HX + 0.05, z: KYD, n: 'x', to: 'yard', btn: 'yard', label: '→ Двор' }],
+    spawn: { x: KX + 1.6, z: 1.5, yaw: 0.55 }, from: { yard: { x: KX + KW / 2 - 0.8, z: KYD, yaw: Math.PI / 2 } } },
+  yard: { name: 'двор', cx: YX, cz: 0, w: YW, d: YD, doors: [
+      { x: HX + 0.05, z: KYD, n: 'x', to: 'kitchen', btn: 'kitchen', label: '→ Кухня' }, { x: YGX, z: YGZ, n: 'z', to: 'street', btn: 'street', label: '→ Улица' }],
+    spawn: { x: YX - YW / 2 + 0.8, z: YDZ, yaw: -Math.PI / 2 }, from: { street: { x: YGX, z: YGZ - 0.9, yaw: 0 } } },
+  street: { name: 'улица', cx: SXW, cz: SZW - SCZ, w: SW, d: SD, doors: [{ x: YGX, z: YGZ, n: 'z', to: 'yard', btn: 'yard', label: '→ Двор' }],
+    spawn: { x: YGX, z: YGZ + 0.9, yaw: Math.PI } },
+  bedroom: { name: 'спальня', cx: BX, cz: 0, w: BW, d: BD, doors: [{ x: BX + 1.8, z: BD / 2, n: 'z', to: 'hall', btn: 'living', label: '→ Гостиная' }], spawn: { x: BX + 1.6, z: 1.5, yaw: 0.45 } },
+};
+// шаг с учётом стен: внутри комнаты — до стены (запас WALL_M); у проёма — тянет к его середине, в проёме — можно за стену (в соседнюю комнату)
+function confine(x, z) {
+  const R = ROOMS[room], cx = R.cx + clamp(x - R.cx, R.w / 2 - WALL_M), cz = R.cz + clamp(z - R.cz, R.d / 2 - WALL_M);
+  if (cx === x && cz === z) return [x, z];
+  for (const D of R.doors) {
+    let a = D.n === 'z' ? x - D.x : z - D.z; const c = D.n === 'z' ? z - D.z : x - D.x;
+    if (Math.abs(c) > DOOR_DEPTH || Math.abs(a) > DOOR_W / 2 + 0.3) continue;
+    if (Math.abs(a) > DOOR_HALF) a = Math.sign(a) * Math.max(DOOR_HALF, Math.abs(a) - 0.06);
+    if (Math.abs(a) <= DOOR_HALF + 1e-6) return D.n === 'z' ? [D.x + a, z] : [x, D.z + a];
+  }
+  return [cx, cz];
+}
+// перешёл плоскость проёма — уже в соседней комнате (без кнопки и затемнения)
+function portal() {
+  const R = ROOMS[room];
+  for (const D of R.doors) {
+    const a = D.n === 'z' ? player.x - D.x : player.z - D.z; if (Math.abs(a) > DOOR_HALF + 0.02) continue;
+    const c = D.n === 'z' ? player.z - D.z : player.x - D.x, side = Math.sign(D.n === 'z' ? R.cz - D.z : R.cx - D.x);
+    if (c * side < -0.02) { enterRoom(D.to); return true; }
+  }
+  return false;
+}
+let down = null;
+// ---------- ПК (10.11: «на ПК с мышкой отдать управление видом на мышку, а действие — клик»): захват указателя,
+// мышь — обзор, клик — по тому, что в прицеле; Esc — свободный курсор (кнопки карточки и режимы). Захват не дался — прежнее «тяни и нажми».
+const FINE = matchMedia('(pointer: fine)').matches && matchMedia('(hover: hover)').matches;
+const WALK = 2.0, RUN = 3.8;   // м/с: шаг и бег (Shift) — одинаково во всех комнатах
+const CONTROLS = 'WASD — идти · Shift — бежать · мышь — смотреть · E — взять';
+let locked = false, lockFailed = false, aimed = null;
+const cross = document.getElementById('cross'), lockTip = document.getElementById('lockTip'), keysHelp = document.getElementById('keysHelp');
+if (FINE) {
+  document.body.classList.add('fine');
+  document.getElementById('howto').textContent = CONTROLS + ' · клик — смотреть мышью; вещь в прицеле — подойти и открыть, пол — пройти · двери — просто войди · 1 / 2 / 3 — режим · Esc — курсор.';
+  document.getElementById('keysHelp').textContent = CONTROLS;
+} else document.body.classList.add('touch');
+function lockMouse() {
+  if (!FINE || locked || lockFailed) return;
+  try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => { lockFailed = true; }); } catch (e) { lockFailed = true; }
+}
+document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === canvas; document.body.classList.toggle('locked', locked); if (!locked) aim(null); });
+document.addEventListener('pointerlockerror', () => { lockFailed = true; });
+document.addEventListener('mousemove', e => {
+  if (!locked) return;
+  player.yaw -= e.movementX * 0.0022; player.pitch = Math.max(-1.0, Math.min(0.9, player.pitch - e.movementY * 0.0022));
+});
+function aim(key) {
+  if (aimed === key) return;
+  if (aimed && labels.get(aimed)) labels.get(aimed).classList.remove('aim');
+  aimed = key; if (key && labels.get(key)) labels.get(key).classList.add('aim');
+  cross.classList.toggle('on', !!key);
+}
+const keyOf = p => p && (p.o.userData.word || (p.o.userData.person ? 'p:' + p.o.userData.person : null));
+// касание вещи или человека издалека — сначала подойти (pend), действие — по приходу; мышь — как раньше, сразу
+const REACH = 2.2;   // ближе — действие сразу (квест берёт вещь с 2,6 м, отдаёт человеку с 2,4 м)
+let pend = null;     // { p, c, cy, D, room, mode }
+function goNear(p) {
+  const o = p.o, c = o.getWorldPosition(new THREE.Vector3());
+  if (o.userData.word && byId[o.userData.word].area && p.point) {   // дорога, пляж, море (12.11): идём в точку касания, по приходу — слово
+    const tx = clampX(p.point.x), tz = clampZ(p.point.z);
+    if (Math.hypot(tx - player.x, tz - player.z) <= 0.6) return false;
+    closeCard(); walkTo(tx, tz); pend = { p, c: new THREE.Vector3(tx, 0, tz), cy: 1.0, D: 3, room, mode }; return true;
+  }
+  if (c.y > 2.6 || Math.hypot(c.x - player.x, c.z - player.z) <= REACH) return false;   // рядом или в небе (солнце, облако) — сразу
+  const b = meshBox(p.unit || o), r = b.isEmpty() ? 0.3 : Math.max(b.max.x - b.min.x, b.max.z - b.min.z) / 2;
+  const D = Math.min(1.5, Math.max(o.userData.person ? 1.5 : 0.85, r + 0.55));   // перед вещью, не в ней; перед человеком — 1,5 м (у человечков большая голова — ближе она на весь экран)
+  closeCard(); walkTo(c.x, c.z, D);
+  pend = { p, c, cy: b.isEmpty() ? c.y + 0.5 : o.userData.person ? b.max.y - 0.3 : (b.min.y + b.max.y) / 2, D, room, mode };
+  return true;
+}
+function act(p, walk) {
+  if (!p) { if (mode === 'look') closeCard(); return; }   // 24.11 : просмотр — клик в пустоту (небо, даль) убирает карточку
+  const thing = p.o.userData.word || p.o.userData.person;
+  // 24.11 («в режиме просмотра — без лишних кликов: нажал — сразу озвучка и попап; кликнул в пустоту — убрался; в другое — заменился»):
+  // в просмотре к вещи не идём — карточка и звук сразу, где стоишь (и далёкий корабль, до которого не добраться); в «Вспомнить» и квесте — как было
+  if (thing && walk && mode !== 'look' && !(mode === 'quest' && QC.go && p.o.userData.word) && goNear(p)) return;   // улица, квест: путь к вещи строит qClick (к ближнему краю, не в середину автобуса)
+  pend = null;
+  if (mode === 'quest' && thing) { qClick(p); return; }
+  if (thing) {
+    if (locked) document.exitPointerLock();
+    if (p.o.userData.word) openWord(byId[p.o.userData.word]); else openPerson(PEOPLE.find(x => x.id === p.o.userData.person));
+  } else if (p.o.userData.floor) { closeCard(); walkTo(clampX(p.point.x), clampZ(p.point.z)); }
+}
+// ---------- касания (11.11: «продолжить строительство сцены, удобство управления») ----------
+// Как в играх: левая треть экрана ниже верхней четверти — джойстик под пальцем, скорость по отклонению; остальное — обзор перетаскиванием;
+// оба пальца сразу (джойстик + обзор) — каждый по своему pointerId. Касание без сдвига — действие (см. act): вещь, человек — подойти; пол — пройти.
+// Кнопки ▲▼ убраны: круг 116 px помещается в угол и телефона 390 px, а шаг кнопкой только повторял бы джойстик (и занимал правый угол — там теперь дверь).
+const touches = new Map();   // pointerId → { t0, lx, ly, moved, zone: 'joy' | 'look' | 'extra' }
+const JOY = { id: null, ox: 0, oy: 0, vx: 0, vy: 0 };   // vx, vy — отклонение −1…1 (вправо, вниз)
+let lookId = null;
+const joyEl = document.getElementById('joy'), joyBase = joyEl.querySelector('.base'), joyKnob = joyEl.querySelector('.knob'), safeEl = document.getElementById('safe');
+const hintEl = document.getElementById('hint'), doneEl = document.getElementById('done');
+const JR = () => matchMedia('(min-width: 700px) and (min-height: 700px)').matches ? 68 : 58;   // = радиус круга в CSS (скрытый круг offsetWidth не знает)
+function safeBox() { const s = getComputedStyle(safeEl); return { l: parseFloat(s.paddingLeft) || 0, r: parseFloat(s.paddingRight) || 0, t: parseFloat(s.paddingTop) || 0, b: parseFloat(s.paddingBottom) || 0 }; }
+function joyDraw(bx, by, kx, ky) { joyBase.style.transform = `translate(${bx}px, ${by}px)`; joyKnob.style.transform = `translate(${kx}px, ${ky}px)`; }
+function joyIdle() { const s = safeBox(), R = JR(), x = Math.max(16, s.l + 8) + R, y = innerHeight - Math.max(16, s.b + 8) - R; joyDraw(x, y, x, y); joyEl.classList.remove('on'); }
+function joyAt(x, y) {   // отклонение — от точки касания; палец ушёл за край — круг едет следом; рисуем круг целиком на экране
+  let dx = x - JOY.ox, dy = y - JOY.oy; const R = JR(), d = Math.hypot(dx, dy);
+  if (d > R) { const k = (d - R) / d; JOY.ox += dx * k; JOY.oy += dy * k; dx -= dx * k; dy -= dy * k; }
+  JOY.vx = dx / R; JOY.vy = dy / R;
+  const s = safeBox(), bx = Math.max(s.l + R + 4, Math.min(innerWidth - s.r - R - 4, JOY.ox)), by = Math.max(s.t + R + 4, Math.min(innerHeight - s.b - R - 4, JOY.oy));
+  joyDraw(bx, by, bx + dx, by + dy);
+}
+const joyZoneX = () => Math.max(innerWidth / 3, Math.max(16, safeBox().l + 8) + 2 * JR() + 16);   // левая треть, но не уже круга в покое (телефон 390: 148 px)
+const nowT = () => REC ? recNow : performance.now();   // запись видео идёт по своим часам (кадр — 40 мс, сколько бы ни снимался)
+const lookK = () => 2.1 / Math.min(innerWidth, innerHeight);   // протянуть по короткой стороне экрана — ~120° и на телефоне, и на планшете
+const dots = new Map();   // ?rec=1 — касания видны на записи кружком
+function tdot(e, ph) {
+  if (!REC) return;
+  let d = dots.get(e.pointerId);
+  if (ph === 'down') { d = document.createElement('div'); d.className = 'tdot'; document.body.appendChild(d); dots.set(e.pointerId, d); }
+  if (!d) return;
+  d.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+  if (ph === 'up') { dots.delete(e.pointerId); d.style.opacity = '0'; setTimeout(() => d.remove(), 300); }
+}
+canvas.addEventListener('contextmenu', e => e.preventDefault());   // долгое касание — не меню
+canvas.addEventListener('pointerdown', e => {
+  if (locked) { act(pick(innerWidth / 2, innerHeight / 2), true); return; }   // клик по прицелу = E: далеко — подойти
+  canvas.setPointerCapture(e.pointerId);
+  if (e.pointerType === 'mouse') { down = { x: e.clientX, y: e.clientY, t: performance.now(), lx: e.clientX, ly: e.clientY, moved: 0 }; return; }
+  const zone = JOY.id === null && e.clientX < joyZoneX() && e.clientY > innerHeight * 0.25 ? 'joy' : lookId === null ? 'look' : 'extra';
+  touches.set(e.pointerId, { t0: nowT(), lx: e.clientX, ly: e.clientY, moved: 0, zone });
+  if (zone === 'joy') { JOY.id = e.pointerId; JOY.ox = e.clientX; JOY.oy = e.clientY; document.body.classList.add('joyon'); joyEl.classList.add('on'); joyEl.classList.remove('hide'); joyAt(e.clientX, e.clientY); }
+  else if (zone === 'look') lookId = e.pointerId;
+  tdot(e, 'down');
+});
+canvas.addEventListener('pointermove', e => {
+  const t = touches.get(e.pointerId);
+  if (t) {
+    const dx = e.clientX - t.lx, dy = e.clientY - t.ly; t.lx = e.clientX; t.ly = e.clientY; t.moved += Math.abs(dx) + Math.abs(dy);
+    if (t.zone === 'joy') joyAt(e.clientX, e.clientY);
+    else if (t.zone === 'look' && t.moved > 6) { const k = lookK(); player.yaw -= dx * k; player.pitch = Math.max(-1.0, Math.min(0.9, player.pitch - dy * k * 0.8)); }
+    tdot(e, 'move'); return;
+  }
+  if (down) {
+    const dx = e.clientX - down.lx, dy = e.clientY - down.ly; down.lx = e.clientX; down.ly = e.clientY; down.moved += Math.abs(dx) + Math.abs(dy);
+    if (down.moved > 6) { player.yaw -= dx * 0.005; player.pitch = Math.max(-1.0, Math.min(0.9, player.pitch - dy * 0.004)); }
+  } else if (e.pointerType === 'mouse') {
+    const p = pick(e.clientX, e.clientY); canvas.style.cursor = p && !p.o.userData.floor ? 'pointer' : 'grab';
+  }
+});
+function touchEnd(e) {
+  const t = touches.get(e.pointerId); if (!t) return false;
+  touches.delete(e.pointerId); tdot(e, 'up');
+  if (JOY.id === e.pointerId) { JOY.id = null; JOY.vx = JOY.vy = 0; joyIdle(); document.body.classList.remove('joyon'); }
+  if (lookId === e.pointerId) lookId = null;
+  if (e.type === 'pointerup' && t.moved < 12 && nowT() - t.t0 < 450) act(pick(e.clientX, e.clientY), true);
+  return true;
+}
+canvas.addEventListener('pointerup', e => {
+  if (touchEnd(e) || !down) return;
+  const tap = down.moved < 10 && performance.now() - down.t < 450; down = null;
+  if (!tap) return;
+  if (FINE && !lockFailed && e.pointerType === 'mouse') {   // ПК: клик по сцене — захватить мышь
+    if (mode === 'look') { const p = pick(e.clientX, e.clientY); if (p && (p.o.userData.word || p.o.userData.person)) { act(p, false); return; } }   // 24.11: просмотр — клик по вещи под курсором сразу открывает её (без захвата)
+    closeCard(); lockMouse(); return; }
+  act(pick(e.clientX, e.clientY), true);
+});
+canvas.addEventListener('pointercancel', e => { if (!touchEnd(e)) down = null; });
+// ---------- управление на ПК — одно на все комнаты (12.11: «в одной комнате одно управление, в другой другое, например Shift — бежать») ----------
+// Клавиши — по месту (e.code: у ученика греческого часто греческая раскладка, и W там — ς). WASD и стрелки — шаг (стрелки = WASD), Shift — бег,
+// мышь — обзор (захват указателя), клик или E — действие с тем, что в прицеле (далеко — сначала подойти, как касанием), E у проёма без цели — кнопка-ярлык,
+// 1 / 2 / 3 — режим, Esc — курсор. Скорость одна для клавиш, джойстика и пути по касанию: WALK, с Shift — RUN.
+const keys = new Set();
+const KEY = { KeyW: 'f', ArrowUp: 'f', KeyS: 'b', ArrowDown: 'b', KeyA: 'l', ArrowLeft: 'l', KeyD: 'r', ArrowRight: 'r', ShiftLeft: 'run', ShiftRight: 'run' };
+const MODE_KEY = { Digit1: 'look', Numpad1: 'look', Digit2: 'recall', Numpad2: 'recall', Digit3: 'quest', Numpad3: 'quest' };
+addEventListener('keydown', e => {
+  const k = KEY[e.code]; if (k) { keys.add(k); if (e.code.startsWith('Arrow')) e.preventDefault(); }
+  if (e.key === 'Escape') closeCard();
+  if (MODE_KEY[e.code] && !e.repeat) setMode(MODE_KEY[e.code]);
+  if (e.code === 'KeyE' && !e.repeat) useKey();
+});
+function useKey() {
+  const p = locked ? pick(innerWidth / 2, innerHeight / 2) : null;
+  if (p && (p.o.userData.word || p.o.userData.person)) { act(p, true); return; }
+  if (doorBtn.style.display === 'block') goRoom(doorBtn.dataset.to);
+}
+addEventListener('keyup', e => { const k = KEY[e.code]; if (k) keys.delete(k); });
+addEventListener('blur', () => keys.clear());   // окно потеряло фокус с зажатой W — не идти дальше самому
+
+// ---------- кадр ----------
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight;
+  // телефон в портрете: держим обзор по горизонтали не уже ~55°, иначе видно полстены
+  const v = 70, hMin = 75 * Math.PI / 180;
+  camera.fov = camera.aspect >= 1 ? v : Math.min(95, Math.max(v, 2 * Math.atan(Math.tan(hMin / 2) / camera.aspect) * 180 / Math.PI));
+  camera.updateProjectionMatrix();
+  if (JOY.id === null) joyIdle();
+}
+addEventListener('resize', resize); resize();
+const tmp = new THREE.Vector3();
+// ?rec=1 — запись видео кадр за кадром (record_quest.py): кадры ведёт __palace.tick(мс), таймеры квеста — по тому же времени
+const REC = /[?&]rec=1/.test(location.search);
+let last = REC ? 0 : performance.now(), aimTick = 0, recNow = 0;
+const recTimers = [];
+const later = (fn, ms) => { if (REC) recTimers.push({ at: recNow + ms, fn }); else setTimeout(fn, ms); };
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (pend && lookId === null) {   // подходим к вещи — взгляд сам поворачивается к ней (палец на обзоре — не мешаем)
+    const P = pend; let dy = Math.atan2(-(P.c.x - player.x), -(P.c.z - player.z)) - player.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+    player.yaw += dy * Math.min(1, dt * 5);
+    player.pitch += (Math.max(-0.75, Math.min(0.3, Math.atan2(P.cy - EYE, P.D))) - player.pitch) * Math.min(1, dt * 3);
+  }
+  const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw), sx = -fz, sz = fx;
+  let mv = 0, st = 0;
+  if (keys.has('f')) mv += 1;
+  if (keys.has('b')) mv -= 1;
+  if (keys.has('l')) st -= 1;
+  if (keys.has('r')) st += 1;
+  if (JOY.id !== null) {   // джойстик: мёртвая зона 14 %, дальше скорость растёт с отклонением
+    const m = Math.hypot(JOY.vx, JOY.vy), DZ = 0.14;
+    if (m > DZ) { const k = Math.min(1, (m - DZ) / (1 - DZ)) / m; mv -= JOY.vy * k; st += JOY.vx * k; }
+  }
+  const mn = Math.hypot(mv, st); if (mn > 1) { mv /= mn; st /= mn; }   // по диагонали не быстрее
+  const spd = keys.has('run') ? RUN : WALK, sp = spd * dt;
+  if (mv || st) { player.tx = null; way.length = 0; pend = null; [player.x, player.z] = confine(player.x + (fx * mv + sx * st) * sp, player.z + (fz * mv + sz * st) * sp); }
+  let want = 0; const px0 = player.x, pz0 = player.z;
+  if (!(mv || st) && player.tx !== null) {
+    const dx = player.tx - player.x, dz = player.tz - player.z, d = Math.hypot(dx, dz);
+    if (d < 0.05) { if (way.length) { const w = way.shift(); player.tx = w.x; player.tz = w.z; } else player.tx = null; }   // следующая точка пути или пришли
+    else { const k = Math.min(1, (spd * dt) / d); player.x += dx * k; player.z += dz * k; want = d * k; }
+  }
+  collide(); portal();
+  if (want > 0.004) {   // путь по касанию упёрся в мебель — стоп (дальше пришли: подход сработает с края)
+    stuck = Math.hypot(player.x - px0, player.z - pz0) < want * 0.3 ? stuck + 1 : 0;
+    if (stuck > 8) { player.tx = null; way.length = 0; stuck = 0; }
+  }
+  for (const g of people) if (roomOf(g) === room) {   // сквозь людей не пройти (10.11: камера влетала в голову экзаменатора)
+    const dx = player.x - g.position.x, dz = player.z - g.position.z, d = Math.hypot(dx, dz), R = 0.55;
+    if (d < R && d > 1e-4) { player.x = g.position.x + dx / d * R; player.z = g.position.z + dz / d * R;
+      if (player.tx !== null && !way.length && Math.hypot(player.tx - g.position.x, player.tz - g.position.z) < R) player.tx = null; }
+  }
+  if (pend && player.tx === null) { const P = pend; pend = null; if (P.room === room && P.mode === mode) { P.p.arrived = true; act(P.p); } }   // пришли — действие
+  if (room === 'street') {   // улица: Петрос следом, пёс дышит, пена у берега; квест — пришёл к месту, куда звали
+    follow(dt); for (const mx of pets) mx.update(dt);
+    foam.position.z = -8.0 + Math.sin(now / 1000 * 0.8) * 0.16; foam.material.opacity = 0.55 + 0.25 * Math.sin(now / 1000 * 0.8 + 1.2);
+    if (mode === 'quest' && QC.go && !Q.done && Q.armed && !fading && reachOf(objById[QC.steps[Q.step].t]) < 1.0) goOk();
+  }
+  joyEl.classList.toggle('hide', JOY.id === null && (card.style.display === 'block' || hintEl.style.display !== 'none' || doneEl.style.display === 'block'));
+  camera.position.set(player.x, EYE, player.z);
+  camera.rotation.set(player.pitch, player.yaw, 0, 'YXZ');
+  for (const mx of mixers) mx.update(dt);
+  envK += ((OUTDOOR.has(room) ? 1 : 0) - envK) * Math.min(1, dt * 2.5); yardSun.intensity = 1.3 * envK;   // на улице и во дворе — солнце, плавно
+  fogK += ((room === 'street' ? 1 : 0) - fogK) * Math.min(1, dt * 1.5); scene.fog.near = 20 + 400 * (1 - fogK); scene.fog.far = 47 + 800 * (1 - fogK);
+  if (room === 'bedroom') fan.rotation.y += dt * 0.9;   // вентилятор — медленно (быстрое мелькание утомляет)
+  for (const g of people) if (chars[g.userData.person] && !g.userData.sitting && !g.userData.moving && roomOf(g) === room) {   // стоящие поворачиваются к подошедшему
+    const dx = player.x - g.position.x, dz = player.z - g.position.z;
+    if (Math.hypot(dx, dz) < 3.4) { let d = Math.atan2(dx, dz) - g.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); g.rotation.y += d * Math.min(1, dt * 2.5); }
+  }
+  { const dd = d => Math.hypot(player.x - d.x, player.z - d.z), D = fading ? null : ROOMS[room].doors.filter(d => dd(d) < 1.5).sort((a, b) => dd(a) - dd(b))[0], on = D ? D.btn : '';   // кнопка-ярлык у ближнего проёма
+    if (doorBtn.dataset.to !== on || doorBtn.dataset.room !== room) { doorBtn.dataset.to = on; doorBtn.dataset.room = room; doorBtn.style.display = D ? 'block' : 'none'; if (D) doorBtn.textContent = D.label + (FINE ? ' (E)' : ''); } }
+  if (locked && (++aimTick % 4 === 0)) aim(keyOf(pick(innerWidth / 2, innerHeight / 2)));
+  if (FINE) { const open = document.getElementById('hint').style.display === 'none'; lockTip.style.display = !locked && !lockFailed && open && card.style.display !== 'block' ? 'block' : 'none';
+    keysHelp.style.display = open ? 'block' : 'none'; }
+  renderer.render(scene, camera);
+  // подписи: проекция точки над предметом (labelY — от низа предмета); за спиной и далеко — прячем
+  const all = [...objects.map(g => [g.userData.word, g]), ...people.map(g => ['p:' + g.userData.person, g])];
+  const vis = [];
+  for (const [key, g] of all) {
+    const d = labels.get(key); if (roomOf(g) !== room) { d.style.display = 'none'; continue; }
+    if (g.userData.word && byId[g.userData.word].area) areaPoint(g, tmp); else g.getWorldPosition(tmp); tmp.y += g.userData.labelY;
+    const dist = tmp.distanceTo(camera.position); tmp.project(camera);
+    if (!(tmp.z < 1 && Math.abs(tmp.x) < 1.1 && Math.abs(tmp.y) < 1.1 && dist < 7.5)) { d.style.display = 'none'; continue; }
+    d.style.display = 'block';
+    vis.push({ d, dist, x: (tmp.x + 1) / 2 * innerWidth, y: (1 - tmp.y) / 2 * innerHeight });
+  }
+  // ближние ставим первыми; дальнюю, если налезает, поднимаем над уже поставленными
+  vis.sort((a, b) => a.dist - b.dist);
+  const placed = [];
+  for (const v of vis) {
+    const w = v.d.offsetWidth || 80, h = v.d.offsetHeight || 26;
+    let y = v.y;
+    for (let k = 0; k < 6; k++) {
+      const hit = placed.find(r => Math.abs(r.x - v.x) < (r.w + w) / 2 + 4 && Math.abs(r.y - y) < (r.h + h) / 2 + 3);
+      if (!hit) break;
+      y = hit.y - (hit.h + h) / 2 - 4;
+    }
+    placed.push({ x: v.x, y, w, h });
+    v.d.style.left = v.x + 'px'; v.d.style.top = y + 'px';
+    v.d.style.opacity = v.dist > 5.5 ? String(Math.max(0.35, 1 - (v.dist - 5.5) / 3)) : '';
+  }
+  if (!REC) requestAnimationFrame(frame);
+}
+// подпись площади (дорога, пляж, море) — не в её далёкой середине, а впереди по взгляду, у ближнего края (12.11: путь к морю идёт краем улицы)
+function areaPoint(g, out) {
+  const b = g.userData.abox || (g.userData.abox = meshBox(g)), fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw), c = (v, a, z) => Math.max(a, Math.min(z, v));
+  out.set(c(player.x + fx * 3, b.min.x + 0.8, b.max.x - 0.8), 0, c(player.z + fz * 3, b.min.z + 0.6, b.max.z - 0.6));
+}
+refreshLabels();
+if (!REC) requestAnimationFrame(frame);
+const doorBtn = document.getElementById('doorBtn'), fadeEl = document.getElementById('fade');
+let fading = false;
+// ---------- комнаты: вход пешком через проём (portal) или кнопкой-ярлыком (goRoom: затемнение и перенос) — дальше одно и то же ----------
+const OUTDOOR = new Set(['yard', 'street']);
+let envK = 0, fogK = 0;
+// видны своя комната и соседние (за проёмами); остальные — на слое 1 (камера их не рисует), их лампы гаснут — число ламп то же, шейдеры не пересобираются
+const VIS = { living: ['living', 'hall'], hall: ['hall', 'living', 'kitchen', 'bedroom'], kitchen: ['kitchen', 'hall', 'yard'], bedroom: ['bedroom', 'hall'],
+  yard: ['yard', 'kitchen', 'street'], street: ['street', 'yard'] };
+function cull(force) {
+  const vis = new Set(VIS[room] || [room]);
+  for (const g of [...objects, ...decors, ...people]) { const off = !vis.has(roomOf(g)); if (!force && !!g.userData.culled === off) continue; g.userData.culled = off; g.traverse(o => o.layers.set(off ? 1 : 0)); }
+  for (const [l, r, i] of roomLights) l.intensity = vis.has(r) ? i : 0;
+}
+function enterRoom(to, was) {
+  was = was || room; room = to;
+  if (to === 'street') petrosHome();
+  document.getElementById('roomName').textContent = ROOMS[to].name;
+  cull(); if (mode === 'quest') qStart(); refreshLabels(); log('room', { from: was, to });
+}
+function goRoom(to) {
+  if (fading || !ROOMS[to] || to === room) return;
+  fading = true; fadeEl.style.opacity = '1'; closeCard(); pend = null;
+  later(() => {
+    const was = room, sp = (ROOMS[to].from || {})[was] || ROOMS[to].spawn; player.x = sp.x; player.z = sp.z; player.yaw = sp.yaw; player.tx = null; way.length = 0; player.pitch = innerWidth < innerHeight ? -0.24 : -0.12;
+    enterRoom(to, was);// в новой комнате — взгляд прямо
+    fadeEl.style.opacity = '0'; fading = false;
+  }, 320);
+}
+doorBtn.onclick = () => goRoom(doorBtn.dataset.to);
+document.getElementById('go').onclick = () => { document.getElementById('hint').style.display = 'none'; log('open', { fine: FINE }); lockMouse(); };
+// ---------- квест (10.11: — «персонаж по-гречески: сходи и принеси… принёс не то — он говорит, что ты принёс и что он просил»;
+// — «прототип ОДНОГО квеста, понять, рабочая ли механика»). Греческое — только формы, прошедшие verify_greek (quest/texts.txt);
+// образцы — строки курса dose-mou «Δώσε μου την τσάντα.», afti-anna «Αυτή είναι η Άννα.», thelo-ena-psomi «Θέλω ένα ψωμί.»; русское — дословно, как в курсе.
+// Контраст курса: в ответе «нет, это…» — ο / η / το, в просьбе и «хочу» — τον / την / το.
+const QUESTS = {
+  hall: { none: true, steps: [], no: {} },   // коридор — проход между комнатами, своих слов и заданий нет
+  living: { npc: 'eleni', who: 'Элени', to: 'к Элени', src: k => `quest/${k}.mp3`, steps: [
+    { t: 'tsanta', gr: 'Δώσε μου την τσάντα.', ru: 'Дай мне сумку.', src: lineSrc('dose-mou', 'athina'), want: 'Θέλω την τσάντα.', wantRu: 'Хочу сумку.' },
+    { t: 'vivlio', gr: 'Δώσε μου το βιβλίο.', ru: 'Дай мне книгу.', want: 'Θέλω το βιβλίο.', wantRu: 'Хочу книгу.' },
+    { t: 'kafes', gr: 'Δώσε μου τον καφέ.', ru: 'Дай мне кофе.', want: 'Θέλω τον καφέ.', wantRu: 'Хочу кофе.' },
+    { t: 'omprela', gr: 'Δώσε μου την ομπρέλα.', ru: 'Дай мне зонт.', want: 'Θέλω την ομπρέλα.', wantRu: 'Хочу зонт.' },
+    { t: 'krasi', gr: 'Δώσε μου το κόκκινο κρασί.', ru: 'Дай мне красное вино.', want: 'Θέλω το κόκκινο κρασί.', wantRu: 'Хочу красное вино.' },
+  ], no: {
+    tsanta: ['Όχι, αυτή είναι η τσάντα.', 'Нет, это есть сумка.'], vivlio: ['Όχι, αυτό είναι το βιβλίο.', 'Нет, это есть книга.'],
+    kafes: ['Όχι, αυτός είναι ο καφές.', 'Нет, это есть кофе.'], omprela: ['Όχι, αυτή είναι η ομπρέλα.', 'Нет, это есть зонт.'],
+    krasi: ['Όχι, αυτό είναι το κόκκινο κρασί.', 'Нет, это есть красное вино.'], mpira: ['Όχι, αυτή είναι η μπίρα.', 'Нет, это есть пиво.'],
+    fyto: ['Όχι, αυτό είναι το φυτό.', 'Нет, это есть растение.'], kleidi: ['Όχι, αυτό είναι το κλειδί.', 'Нет, это есть ключ.'],
+  } },
+  // кухня: греческое — kitchen/texts.txt (verify_greek 0); счёт — δύο / τρεις (♀) / τρία (○), ответ «нет» — αυτό/αυτά, αυτή/αυτές по числу
+  kitchen: { npc: 'nikos', who: 'Никос', to: 'к Никосу', src: k => `kitchen/q/${k}.mp3`, steps: [
+    { t: 'psomi', key: 'psomi', gr: 'Δώσε μου το ψωμί.', ru: 'Дай мне хлеб.', want: 'Θέλω το ψωμί.', wantRu: 'Хочу хлеб.' },
+    { t: 'avgo', n: 2, key: 'avgo-2', gr: 'Δώσε μου δύο αυγά.', ru: 'Дай мне два яйца.', want: 'Θέλω δύο αυγά.', wantRu: 'Хочу два яйца.' },
+    { t: 'ntomata', n: 3, key: 'ntomata-3', gr: 'Δώσε μου τρεις ντομάτες.', ru: 'Дай мне три помидора.', want: 'Θέλω τρεις ντομάτες.', wantRu: 'Хочу три помидора.' },
+    { t: 'machairi', key: 'machairi', gr: 'Δώσε μου το μαχαίρι.', ru: 'Дай мне нож.', want: 'Θέλω το μαχαίρι.', wantRu: 'Хочу нож.' },
+    { t: 'lemoni', n: 3, key: 'lemoni-3', gr: 'Δώσε μου τρία λεμόνια.', ru: 'Дай мне три лимона.', want: 'Θέλω τρία λεμόνια.', wantRu: 'Хочу три лимона.' },
+  ], no: {
+    psomi: ['Όχι, αυτό είναι το ψωμί.', 'Нет, это есть хлеб.'], tyri: ['Όχι, αυτό είναι το τυρί.', 'Нет, это есть сыр.'],
+    machairi: ['Όχι, αυτό είναι το μαχαίρι.', 'Нет, это есть нож.'], pirouni: ['Όχι, αυτό είναι το πιρούνι.', 'Нет, это есть вилка.'],
+    koutali: ['Όχι, αυτό είναι το κουτάλι.', 'Нет, это есть ложка.'], milo: ['Όχι, αυτό είναι το μήλο.', 'Нет, это есть яблоко.'],
+    gala: ['Όχι, αυτό είναι το γάλα.', 'Нет, это есть молоко.'], psari: ['Όχι, αυτό είναι το ψάρι.', 'Нет, это есть рыба.'],
+    banana: ['Όχι, αυτή είναι η μπανάνα.', 'Нет, это есть банан.'],
+  }, rule: (s, g) => s.n && g.id === s.t ? RULE_NUM : '', count: {
+    avgo: { 1: ['Όχι, αυτό είναι ένα αυγό.', 'Нет, это есть одно яйцо.'], 2: ['Όχι, αυτά είναι δύο αυγά.', 'Нет, это есть два яйца.'],
+      3: ['Όχι, αυτά είναι τρία αυγά.', 'Нет, это есть три яйца.'], 4: ['Όχι, αυτά είναι τέσσερα αυγά.', 'Нет, это есть четыре яйца.'] },
+    ntomata: { 1: ['Όχι, αυτή είναι μία ντομάτα.', 'Нет, это есть один помидор.'], 2: ['Όχι, αυτές είναι δύο ντομάτες.', 'Нет, это есть два помидора.'],
+      3: ['Όχι, αυτές είναι τρεις ντομάτες.', 'Нет, это есть три помидора.'], 4: ['Όχι, αυτές είναι τέσσερις ντομάτες.', 'Нет, это есть четыре помидора.'] },
+    lemoni: { 1: ['Όχι, αυτό είναι ένα λεμόνι.', 'Нет, это есть один лимон.'], 2: ['Όχι, αυτά είναι δύο λεμόνια.', 'Нет, это есть два лимона.'],
+      3: ['Όχι, αυτά είναι τρία λεμόνια.', 'Нет, это есть три лимона.'], 4: ['Όχι, αυτά είναι τέσσερα λεμόνια.', 'Нет, это есть четыре лимона.'] },
+  } },
+  // двор: греческое — yard/texts.txt (verify_greek 0); прилагательное по роду: το κόκκινο, τη μικρή, τον μεγάλο κάκτο (τον съедает ς — узор 3.2)
+  yard: { npc: 'maria', who: 'Мария', to: 'к Марии', src: k => `yard/q/${k}.mp3`, steps: [
+    { t: 'louloudi-kokkino', gr: 'Δώσε μου το κόκκινο λουλούδι.', ru: 'Дай мне красный цветок.', want: 'Θέλω το κόκκινο λουλούδι.', wantRu: 'Хочу красный цветок.' },
+    { t: 'kolokytha-mikri', gr: 'Δώσε μου τη μικρή κολοκύθα.', ru: 'Дай мне маленькую тыкву.', want: 'Θέλω τη μικρή κολοκύθα.', wantRu: 'Хочу маленькую тыкву.' },
+    { t: 'kaktos-megalos', gr: 'Δώσε μου τον μεγάλο κάκτο.', ru: 'Дай мне большой кактус.', want: 'Θέλω τον μεγάλο κάκτο.', wantRu: 'Хочу большой кактус.' },
+    { t: 'louloudi-kitrino', gr: 'Δώσε μου το κίτρινο λουλούδι.', ru: 'Дай мне жёлтый цветок.', want: 'Θέλω το κίτρινο λουλούδι.', wantRu: 'Хочу жёлтый цветок.' },
+    { t: 'kaktos-mikros', gr: 'Δώσε μου τον μικρό κάκτο.', ru: 'Дай мне маленький кактус.', want: 'Θέλω τον μικρό κάκτο.', wantRu: 'Хочу маленький кактус.' },
+  ], no: {
+    'louloudi-kokkino': ['Όχι, αυτό είναι το κόκκινο λουλούδι.', 'Нет, это есть красный цветок.'], 'louloudi-kitrino': ['Όχι, αυτό είναι το κίτρινο λουλούδι.', 'Нет, это есть жёлтый цветок.'],
+    'louloudi-mov': ['Όχι, αυτό είναι το μωβ λουλούδι.', 'Нет, это есть фиолетовый цветок.'],
+    'kolokytha-megali': ['Όχι, αυτή είναι η μεγάλη κολοκύθα.', 'Нет, это есть большая тыква.'], 'kolokytha-mikri': ['Όχι, αυτή είναι η μικρή κολοκύθα.', 'Нет, это есть маленькая тыква.'],
+    'kaktos-megalos': ['Όχι, αυτός είναι ο μεγάλος κάκτος.', 'Нет, это есть большой кактус.'], 'kaktos-mikros': ['Όχι, αυτός είναι ο μικρός κάκτος.', 'Нет, это есть маленький кактус.'],
+    karoto: ['Όχι, αυτό είναι το καρότο.', 'Нет, это есть морковь.'], manitari: ['Όχι, αυτό είναι το μανιτάρι.', 'Нет, это есть гриб.'],
+  }, rule: (s, g) => g.id !== s.t && g.id.split('-')[0] === s.t.split('-')[0] ? RULE_ADJ : '' },
+  // спальня: греческое — bedroom/texts.txt (verify_greek 0, hunspell 0). «Чей» — узор 9.4; просят по очереди Анна и Йоргос (s.npc): своё — μου,
+  // моё (игрока) — σου, чужое — του/της по хозяину. Принёс не то — «нет» с точки зрения просящего (noFor) и та же просьба ещё раз (again).
+  bedroom: { npc: 'anna', npcs: ['anna', 'giorgos'], who: 'Анна и Йоргос', src: k => `bedroom/q/${k}.mp3`, again: true, no: {},
+    own: { 'kinito-tis': 'anna', 'gyalia-tis': 'anna', 'kinito-tou': 'giorgos', 'gyalia-tou': 'giorgos', 'portofoli-tou': 'giorgos', 'gravata-tou': 'giorgos',
+      'kinito-mou': 'me', 'portofoli-mou': 'me' },
+    steps: [
+      { t: 'kinito-tis', npc: 'anna', gr: 'Πού είναι το κινητό μου;', ru: 'Где есть мобильник мой?' },
+      { t: 'gyalia-tis', npc: 'giorgos', gr: 'Πού είναι τα γυαλιά της;', ru: 'Где есть очки её?' },
+      { t: 'gravata-tou', npc: 'anna', gr: 'Πού είναι η γραβάτα του;', ru: 'Где есть галстук его?' },
+      { t: 'portofoli-mou', npc: 'giorgos', gr: 'Πού είναι το πορτοφόλι σου;', ru: 'Где есть кошелёк твой?' },
+      { t: 'kinito-tou', npc: 'anna', gr: 'Πού είναι το κινητό του;', ru: 'Где есть мобильник его?' },
+    ],
+    noFor(npc, id) {   // тот же расчёт — bedroom/gen_bedroom_audio.py (оттуда звук no-<кто>-<вещь>.mp3)
+      const o = this.own[id], p = o === npc ? 0 : o === 'me' ? 1 : o === 'anna' ? 3 : 2;
+      const B = { kinito: ['αυτό είναι το κινητό', 'это есть мобильник', ['мой', 'твой', 'его', 'её']], gyalia: ['αυτά είναι τα γυαλιά', 'это есть очки', ['мои', 'твои', 'его', 'её']],
+        portofoli: ['αυτό είναι το πορτοφόλι', 'это есть кошелёк', ['мой', 'твой', 'его', 'её']], gravata: ['αυτή είναι η γραβάτα', 'это есть галстук', ['мой', 'твой', 'его', 'её']] }[id.split('-')[0]];
+      return [`Όχι, ${B[0]} ${['μου', 'σου', 'του', 'της'][p]}.`, `Нет, ${B[1]} ${B[2][p]}.`];
+    }, rule: (s, g) => g.id !== s.t && g.id.split('-')[0] === s.t.split('-')[0] ? RULE_POS : '' },
+  // улица: греческое — street/texts.txt (verify_greek --texts 0, hunspell 0). go — не принести, а прийти: Петрос зовёт «Πάμε σε + артикль + место», идёт следом;
+  // пришёл к нужному месту (ближе 1 м — хоть джойстиком) — «Μπράβο!»; коснулся другой вещи и подошёл — «Όχι, αυτό είναι …» + тот же призыв.
+  // Контраст курса: в призыве στον / στη(ν) / στο (узор 3.3, ν перед π — 3.5), в ответе «нет» — ο / η / το. Финал у моря — строка курса ti-oraia-edo.
+  street: { npc: 'petros', who: 'Петрос', go: true, src: k => `street/q/${k}.mp3`, okGr: 'Μπράβο!', okRu: 'Браво!',
+    doneGr: 'Τι ωραία που είναι εδώ!', doneRu: 'Как красиво где есть здесь! (= как здесь красиво)', steps: [
+    { t: 'stasi', gr: 'Πάμε στη στάση!', ru: 'Идём на остановку!' },
+    { t: 'farmakeio', gr: 'Πάμε στο φαρμακείο!', ru: 'Идём в аптеку!' },
+    { t: 'kipos', gr: 'Πάμε στον κήπο!', ru: 'Идём в сад!' },
+    { t: 'paralia', gr: 'Πάμε στην παραλία!', ru: 'Идём на пляж!' },
+    { t: 'thalassa', gr: 'Πάμε στη θάλασσα!', ru: 'Идём на море!' },
+  ], no: {
+    spiti: ['Όχι, αυτό είναι το σπίτι.', 'Нет, это есть дом.'], kipos: ['Όχι, αυτός είναι ο κήπος.', 'Нет, это есть сад.'],
+    mpalkoni: ['Όχι, αυτό είναι το μπαλκόνι.', 'Нет, это есть балкон.'], farmakeio: ['Όχι, αυτό είναι το φαρμακείο.', 'Нет, это есть аптека.'],
+    kafeteria: ['Όχι, αυτή είναι η καφετέρια.', 'Нет, это есть кафе.'], fanari: ['Όχι, αυτό είναι το φανάρι.', 'Нет, это есть светофор.'],
+    aftokinito: ['Όχι, αυτό είναι το αυτοκίνητο.', 'Нет, это есть машина.'], taxi: ['Όχι, αυτό είναι το ταξί.', 'Нет, это есть такси.'],
+    leoforeio: ['Όχι, αυτό είναι το λεωφορείο.', 'Нет, это есть автобус.'], stasi: ['Όχι, αυτή είναι η στάση.', 'Нет, это есть остановка.'],
+    podilato: ['Όχι, αυτό είναι το ποδήλατο.', 'Нет, это есть велосипед.'], skylos: ['Όχι, αυτός είναι ο σκύλος.', 'Нет, это есть пёс.'],
+    xaplostra: ['Όχι, αυτή είναι η ξαπλώστρα.', 'Нет, это есть шезлонг.'], varka: ['Όχι, αυτή είναι η βάρκα.', 'Нет, это есть лодка.'],
+    ammos: ['Όχι, αυτή είναι η άμμος.', 'Нет, это есть песок.'],
+  }, rule: (s, g) => byId[g.id].g !== byId[s.t].g ? RULE_SE : '' },
+};
+// подсказка после неверного счёта — правило курса 4.6 и ссылка на его строку (ответ не светится: число уже звучало в просьбе)
+// двор: подсказка, когда принесли то же слово с другим прилагательным — правило 7.1 (μεγάλος μεγάλη μεγάλο — строка курса megalos-3)
+const RULE_ADJ = '<span style="color:var(--m)">♂</span> μεγάλος · <span style="color:var(--f)">♀</span> μεγάλη · <span style="color:var(--n)">○</span> μεγάλο — прилагательное берёт род слова · <a href="https://easygreek.app/greek/propis/?w=megalos-3" target="_blank" rel="noopener" style="color:var(--accent)">правило в прописи</a>';
+// спальня: принесли ту же вещь другого хозяина — чьё как (узор 9.4, строка synetairos-mou); общего «после слова» не пишем: аудит 09.11 — бывает и после прилагательного
+const RULE_POS = '<b>μου</b> мой · <b>σου</b> твой · <b>του</b> его · <b>της</b> её: το κινητό μου, τα γυαλιά της · артикль — по вещи, <b>του</b> / <b>της</b> — по хозяину: <span style="color:var(--f)">η</span> γραβάτ<span style="color:var(--f)">α</span> του · <a href="https://easygreek.app/greek/propis/?w=synetairos-mou" target="_blank" rel="noopener" style="color:var(--accent)">правило в прописи</a>';
+// улица: пришёл к месту другого рода — артикль в призыве подсказывал род (узор 3.3 «σε + τον/τη/το сливаются», ν — 3.5)
+const RULE_SE = 'σε + <span style="color:var(--m)">τον</span> → <span style="color:var(--m)">στον</span> κήπο · σε + <span style="color:var(--f)">τη(ν)</span> → <span style="color:var(--f)">στη</span> στάση, <span style="color:var(--f)">στην</span> παραλία · σε + <span style="color:var(--n)">το</span> → <span style="color:var(--n)">στο</span> φαρμακείο · <a href="https://easygreek.app/greek/propis/?w=ston-sti-sto" target="_blank" rel="noopener" style="color:var(--accent)">правило в прописи</a>';
+const RULE_NUM = '<span style="color:var(--m)">♂</span> <span style="color:var(--f)">♀</span> τρεις, τέσσερις · <span style="color:var(--n)">○</span> τρία, τέσσερα · <a href="https://easygreek.app/greek/propis/?w=ng-treis-tria" target="_blank" rel="noopener" style="color:var(--accent)">правило в прописи</a>';
+let QC = QUESTS.living;
+const stepKey = s => s.key || s.t;
+const stepSrc = () => { const s = QC.steps[Q.step]; return s.src || QC.src('give-' + stepKey(s)); };
+const objById = Object.fromEntries(objects.map(g => [g.userData.word, g]));
+const npcG = id => people.find(g => g.userData.person === id);
+const eleniG = npcG('eleni');
+const unitsOf = g => { const u = []; g.traverse(o => { if (o.userData.unit) u.push(o); }); return u; };
+const qEl = document.getElementById('quest'), toastEl = document.getElementById('toast');
+let Q = { step: 0, hand: null, err: 0, done: false, ru: false, last: null }, toastT = 0;   // hand: {id, n, units}; last: null | {ok:true} | {ok:false, given}
+function toast(t) { toastEl.textContent = t; toastEl.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => { toastEl.style.display = 'none'; }, 1500); }
+function flat(g) { const v = new THREE.Vector3(); g.getWorldPosition(v); return Math.hypot(v.x - player.x, v.z - player.z); }
+function showAll() { for (const g of objects) { g.visible = true; for (const u of unitsOf(g)) u.visible = true; } }
+function putBack(h) { if (h.units.length) for (const u of h.units) u.visible = true; else objById[h.id].visible = true; }
+const isCount = id => !!(QC.count && QC.count[id]);
+const sNpc = () => QC.steps[Math.min(Q.step, QC.steps.length - 1)].npc || QC.npc;   // кто просит сейчас (в спальне — по очереди)
+const pName = id => PEOPLE.find(p => p.id === id).name;
+const carry = id => QC.own ? id in QC.own : !!QC.no[id] || isCount(id);
+const noLine = h => QC.noFor ? QC.noFor(sNpc(), h.id) : isCount(h.id) ? QC.count[h.id][h.n] : QC.no[h.id];
+const noKey = h => QC.noFor ? `no-${sNpc()}-${h.id}` : isCount(h.id) ? `no-${h.id}-${h.n}` : 'no-' + h.id;
+const thanksKey = (poly, npc) => (poly ? 'thanks-poly' : 'thanks') + (QC.npcs ? '-' + npc : '');   // «спасибо» — голосом того, кому отдали
+function qStart() { QC = QUESTS[room]; showAll(); Q = { step: 0, hand: null, err: 0, done: false, ru: false, last: null, armed: true };
+  if (QC.none) { Q.done = true; qEl.innerHTML = '<div class="tr">В коридоре заданий нет — зайди в комнату: гостиная, кухня, спальня; из кухни — двор, со двора — улица.</div>'; return; }
+  if (QC.go) petrosJoin(); qRender(); playSeq([stepSrc()]); log('quest', { qa: 'start' }); }
+function qStop() { showAll(); Q.hand = null; seqTok++; }
+function qMsg(s) {   // ответ на последнюю попытку: из состояния, чтобы «перевод» работал и после ответа
+  if (!Q.last) return '';
+  if (Q.last.ok) return `<div class="good">${QC.okGr || 'Ευχαριστώ!'}</div>` + (Q.ru ? `<div class="tr">${QC.okRu || 'Благодарю!'}</div>` : '');
+  const n = noLine(Q.last.given);
+  return `<div class="bad">${n[0]} ${s.want || s.gr}</div>` + (Q.ru ? `<div class="tr">${n[1]} ${s.wantRu || s.ru}</div>` : '')
+    + (QC.rule && QC.rule(s, Q.last.given) ? `<div class="tr" style="margin-top:4px">${QC.rule(s, Q.last.given)}</div>` : '');
+}
+function handHTML(h) { if (!h) return '—'; const w = byId[h.id]; return '<b>' + wordHTML(w) + (isCount(h.id) ? ' × ' + h.n : '') + '</b>'; }
+function qRender() {
+  if (Q.done) {
+    qEl.innerHTML = `<div class="who">💬 ${QC.who}</div><div class="gr">${QC.doneGr || 'Ευχαριστώ πολύ!'}</div><div class="tr">${QC.doneRu || 'Благодарю очень (= большое спасибо)!'} · ${QC.steps.length} из ${QC.steps.length}, ошибок ${Q.err}</div>
+      <div class="row"><button class="btn primary" data-q="again">Ещё раз</button><button class="btn" data-q="look">Смотреть слова</button></div>`;
+    return;
+  }
+  const s = QC.steps[Q.step];
+  qEl.innerHTML = `<div class="who">💬 ${s.npc ? pName(s.npc) : QC.who} ${QC.go ? 'зовёт' : 'просит'} · ${Q.step + 1} из ${QC.steps.length}${Q.err ? ' · ошибок ' + Q.err : ''}</div>
+    <div class="gr">${s.gr}</div>${Q.ru ? `<div class="tr">${s.ru}</div>` : ''}${qMsg(s)}
+    <div class="row"><button class="btn" data-q="play">▶ ещё раз</button><button class="btn" data-q="ru">${Q.ru ? 'скрыть перевод' : 'перевод'}</button>
+    ${QC.go ? '' : `<span class="hand">в руке: ${handHTML(Q.hand)}</span>`}</div>`;
+}
+qEl.addEventListener('click', e => {
+  const b = e.target.closest('[data-q]'); if (!b) return;
+  const k = b.dataset.q;
+  if (k === 'play') playSeq([stepSrc()]);
+  else if (k === 'ru') { Q.ru = !Q.ru; qRender(); }
+  else if (k === 'again') qStart();
+  else if (k === 'look') setMode('look');
+});
+function qClick(p) {
+  if (Q.done) return;
+  const w = p.o.userData.word, per = p.o.userData.person;
+  if (QC.go) {   // улица: касание вещи — «иду туда» (подошёл — ответ); дорога, пляж, море — просто путь; Петрос — повторит призыв
+    if (w && byId[w].area) { if (p.point) walkTo(clampX(p.point.x), clampZ(p.point.z)); }
+    else if (w && !p.arrived && reachOf(p.o) > 1.6) goWalk(p);
+    else if (w) goJudge(w);
+    else if (per === QC.npc) playSeq([stepSrc()]);
+    else if (per) openPerson(PEOPLE.find(x => x.id === per));
+    return;
+  }
+  if (w) {
+    if (!carry(w)) { toast('Это не унести'); return; }
+    if (flat(objById[w]) > 2.6) { toast('Подойди ближе'); return; }
+    if (isCount(w)) {   // счётное: каждая штука — отдельно, в руке копится
+      const u = p.unit || unitsOf(objById[w]).find(x => x.visible); if (!u || !u.visible) return;
+      if (Q.hand && Q.hand.id !== w) { putBack(Q.hand); Q.hand = null; }
+      if (!Q.hand) Q.hand = { id: w, n: 0, units: [] };
+      u.visible = false; Q.hand.units.push(u); Q.hand.n++;
+    } else {
+      if (Q.hand) putBack(Q.hand);
+      Q.hand = { id: w, n: 1, units: [] }; objById[w].visible = false;
+    }
+    Q.last = null; play(wordSrc(byId[w])); qRender(); log('quest', { qa: 'take', item: w, n: Q.hand.n, step: Q.step }); return;
+  }
+  if (per === sNpc()) {
+    if (!Q.hand) { playSeq([stepSrc()]); return; }
+    if (flat(npcG(per)) > 2.4) { toast('Подойди ' + (QC.npcs ? PEOPLE.find(x => x.id === per).to : QC.to)); return; }
+    const s = QC.steps[Q.step], given = Q.hand; Q.hand = null;
+    if (given.id === s.t && given.n === (s.n || 1)) {
+      log('quest', { qa: 'give', item: given.id, n: given.n, step: Q.step, ok: true });
+      Q.step++;
+      charDo(per, 'emote-yes');
+      if (Q.step >= QC.steps.length) { Q.done = true; playSeq([QC.src(thanksKey(true, per))]); log('quest', { qa: 'done', err: Q.err }); qRender(); return; }
+      Q.last = { ok: true }; playSeq([QC.src(thanksKey(false, per))]); qRender();
+      const st = Q.step, qc = QC; later(() => { if (mode === 'quest' && !Q.done && Q.step === st && QC === qc) { Q.last = null; qRender(); playSeq([stepSrc()]); } }, 1500);
+    } else {
+      Q.err++; putBack(given);            // не то (или не столько) — вещи возвращаются на место
+      Q.last = { ok: false, given }; charDo(per, 'emote-no');
+      playSeq([QC.src(noKey(given)), QC.again ? stepSrc() : QC.src('want-' + stepKey(s))]); qRender();
+      log('quest', { qa: 'give', item: given.id, n: given.n, step: Q.step, ok: false });
+    }
+    return;
+  }
+  if (per && Q.hand && QC.npcs && QC.npcs.includes(per)) { toast('Просит ' + pName(sNpc())); return; }   // вещь в руке — отдают тому, кто просил
+  if (per) openPerson(PEOPLE.find(x => x.id === per));
+}
+
+function goWalk(p) {   // к ближней точке рамки вещи; по приходу — ответ (p.arrived)
+  const b = meshBox(p.o), c = b.getCenter(new THREE.Vector3());
+  const nx = Math.max(b.min.x, Math.min(b.max.x, player.x)), nz = Math.max(b.min.z, Math.min(b.max.z, player.z));
+  closeCard(); walkTo(clampX(nx), clampZ(nz), 1.2); pend = { p, c, cy: Math.min(2.2, (b.min.y + b.max.y) / 2), D: 1.5, room, mode };   // не вплотную: машина — не во весь экран
+}
+function goJudge(w) {
+  const s = QC.steps[Q.step];
+  if (w === s.t) { goOk(); return; }
+  Q.err++; Q.last = { ok: false, given: { id: w, n: 1, units: [] } }; charDo(QC.npc, 'emote-no');
+  playSeq([QC.src('no-' + w), stepSrc()]); qRender(); log('quest', { qa: 'go', item: w, step: Q.step, ok: false });
+}
+function goOk() {   // пришли к месту, куда звал Петрос
+  const s = QC.steps[Q.step]; pend = null; log('quest', { qa: 'go', item: s.t, step: Q.step, ok: true });
+  Q.step++; Q.armed = false; charDo(QC.npc, 'emote-yes');
+  if (Q.step >= QC.steps.length) { Q.done = true; playSeq([QC.src('done')]); log('quest', { qa: 'done', err: Q.err }); qRender(); return; }
+  Q.last = { ok: true }; playSeq([QC.src('bravo')]); qRender();
+  const st = Q.step, qc = QC; later(() => { if (mode === 'quest' && !Q.done && Q.step === st && QC === qc) { Q.last = null; Q.armed = true; qRender(); playSeq([stepSrc()]); } }, 1500);
+}
+// расстояние по полу от игрока до вещи (до её рамки; внутри — 0): пляж и море — большие, к ним «пришёл», ступив на край
+function reachOf(g) { const b = meshBox(g); if (b.isEmpty()) return Infinity; return Math.hypot(Math.max(b.min.x - player.x, 0, player.x - b.max.x), Math.max(b.min.z - player.z, 0, player.z - b.max.z)); }
+// ---------- Πέτρος идёт следом (12.11): по следу игрока — где прошёл игрок, там нет мебели; отстал далеко — догоняет быстрее ----------
+const trail = [];
+const petrosG = () => npcG('petros');
+function petrosHome() { const g = petrosG(); if (!g) return; g.position.set(PETROS_HOME.x, 0, PETROS_HOME.z); trail.length = 0; }
+function petrosJoin() {   // квест начат вдали от Петроса — он встаёт за спиной игрока (если там свободно), иначе — у калитки
+  const g = petrosG(); if (!g || room !== 'street') return; trail.length = 0;
+  if (Math.hypot(g.position.x - player.x, g.position.z - player.z) < 4) return;
+  const bx = clampX(player.x + Math.sin(player.yaw) * 1.2), bz = clampZ(player.z + Math.cos(player.yaw) * 1.2);
+  g.position.set(PETROS_HOME.x, 0, PETROS_HOME.z);
+  if (!obst.some(o => o.room === 'street' && bx > o.x0 - 0.3 && bx < o.x1 + 0.3 && bz > o.z0 - 0.3 && bz < o.z1 + 0.3)) g.position.set(bx, 0, bz);
+}
+function walkBlend(id, on, dt) {   // покой ↔ шаг плавно (у стоящих покой — смесь idle и static, см. person)
+  const c = chars[id]; if (!c) return;
+  if (!c.walk) { c.walk = c.mx.clipAction(c.clip('walk')); c.walk.play(); c.walk.setEffectiveWeight(0); c.wk = 0; }
+  const was = c.wk; c.wk = Math.max(0, Math.min(1, c.wk + (on ? 1 : -1) * dt * 5));
+  if (was === 0 && c.wk === 0) return;
+  c.walk.setEffectiveWeight(c.wk);
+  if (c.cur === c.base) { c.base.setEffectiveWeight(0.5 * (1 - c.wk)); if (c.still) c.still.setEffectiveWeight(0.5 * (1 - c.wk)); }
+}
+function follow(dt) {
+  const g = petrosG(); if (!g) return false;
+  let moving = false;
+  if (mode === 'quest' && room === 'street' && QC.go) {
+    const last = trail[trail.length - 1];
+    if (!last || Math.hypot(player.x - last.x, player.z - last.z) > 0.3) trail.push({ x: player.x, z: player.z });
+    const dP = Math.hypot(player.x - g.position.x, player.z - g.position.z);
+    while (trail.length > 1 && Math.hypot(trail[0].x - g.position.x, trail[0].z - g.position.z) < 0.25) trail.shift();
+    if (dP > 2.0 && trail.length) {   // держится в двух шагах: ближе — голова человечка на весь экран
+      const t = trail[0], dx = t.x - g.position.x, dz = t.z - g.position.z, d = Math.hypot(dx, dz);
+      if (d > 0.02) { const sp = Math.min(d, (dP > 4 ? 3.2 : 2.3) * dt); g.position.x += dx / d * sp; g.position.z += dz / d * sp; moving = true;
+        let a = Math.atan2(dx, dz) - g.rotation.y; a = Math.atan2(Math.sin(a), Math.cos(a)); g.rotation.y += a * Math.min(1, dt * 8); }
+    } else if (dP <= 2.0) trail.length = 0;
+  }
+  walkBlend('petros', moving, dt); g.userData.moving = moving;
+  return moving;
+}
+
+// ---------- раскладка (10.11: «сумка залезала текстурой в другой предмет», «на холодильник что-то залезло») ----------
+// Мелкие вещи после загрузки моделей сами встают на поверхность под собой и отодвигаются от того, во что вошли сбоку;
+// layoutCheck() перечисляет оставшиеся наложения: мебель с мебелью, вещь с вещью, вход в стену — дым smoke_layout.py красный, пока список не пуст.
+const REST = new Set(['tsanta', 'kafes', 'kleidi', 'vivlio', 'krasi', 'mpira', 'omprela',
+  'tigani', 'avgo', 'ntomata', 'katsarola', 'lemoni', 'psomi', 'machairi', 'psari', 'gala', 'piato', 'pirouni', 'koutali', 'potiri', 'salata', 'tyri', 'milo', 'banana',
+  'louloudi-kokkino', 'louloudi-kitrino', 'louloudi-mov', 'kolokytha-megali', 'kolokytha-mikri', 'kaktos-megalos', 'kaktos-mikros', 'karoto', 'manitari',
+  'maxilari', 'arkoudaki', 'kouverta', 'gravata-tou', 'xypnitiri', 'kinito-tis', 'gyalia-tis', 'portofoli-tou', 'gyalia-tou', 'kinito-tou', 'kinito-mou', 'portofoli-mou']);
+const WALLS = new Set(['parathyro', 'porta', 'kathreftis', 'roloi', 'ilios', 'synnefo', 'kourtina', 'mpalkoni']);
+const solid = o => { const out = []; o.traverse(m => { if (m.isMesh && m.material !== hitM) out.push(m); }); return out; };
+function meshBox(o) { o.updateMatrixWorld(true); const b = new THREE.Box3(); for (const m of solid(o)) b.expandByObject(m); return b; }
+const nameOf = g => g.userData.word || (g.userData.person ? 'p:' + g.userData.person : g.userData.name || '?');
+const rc = new THREE.Raycaster(), V = (x, y, z) => new THREE.Vector3(x, y, z); rc.layers.enableAll();   // раскладка проверяет и невидимые сейчас комнаты
+function settle(g) {
+  scene.updateMatrixWorld(true);   // только что загруженные модели до первой отрисовки стоят «в нуле» — лучи били мимо (10.11: итог плавал от прогона к прогону)
+  const others = [...objects, ...decors, ...floors].filter(o => o !== g && o.visible !== false).flatMap(solid);
+  let moved = 0;
+  for (let pass = 0; pass < 2; pass++) {
+    // сбоку: из середины вещи лучи в четыре стороны на полширины — вошла в соседа → отодвинуть (не больше 15 см)
+    let b = meshBox(g); const c = b.getCenter(V()), sz = b.getSize(V()), y = b.min.y + sz.y * 0.55;
+    for (const [dx, dz, half] of [[1, 0, sz.x / 2], [-1, 0, sz.x / 2], [0, 1, sz.z / 2], [0, -1, sz.z / 2]]) {
+      rc.set(V(c.x, y, c.z), V(dx, 0, dz)); rc.far = half; const h = rc.intersectObjects(others, false)[0];
+      if (h) { const push = Math.min(0.15, half - h.distance + 0.01); g.position.x -= dx * push; g.position.z -= dz * push; moved += push; }
+    }
+    // снизу: самая высокая поверхность под пятью точками дна (вещь могла утонуть до 15 см)
+    b = meshBox(g); const ix = (b.max.x - b.min.x) * 0.35, iz = (b.max.z - b.min.z) * 0.35, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;
+    let top = -Infinity;
+    for (const [ox, oz] of [[0, 0], [ix, iz], [-ix, iz], [ix, -iz], [-ix, -iz]]) {
+      rc.set(V(cx + ox, b.min.y + 0.15, cz + oz), V(0, -1, 0)); rc.far = 1.5; const h = rc.intersectObjects(others, false)[0];
+      if (h) top = Math.max(top, h.point.y);
+    }
+    if (top > -Infinity && Math.abs(top - b.min.y) < 0.4) { g.position.y += top - b.min.y; moved += Math.abs(top - b.min.y); }
+  }
+  return moved;
+}
+function layoutCheck() {
+  scene.updateMatrixWorld(true);
+  const out = [], inter = (a, b) => { const i = a.clone().intersect(b); if (i.isEmpty()) return 0; const s = i.getSize(V()); return s.x * s.y * s.z; };
+  const furn = [...objects.filter(g => !REST.has(g.userData.word) && !WALLS.has(g.userData.word) && !g.userData.flat), ...decors.filter(g => !g.userData.flat), ...people.filter(g => g.userData.person !== 'examiner')];
+  // человечек — столб 0,6 × 0,6 м: рамка модели в исходной позе (руки в стороны) вдвое шире стоящего человека
+  const pbox = g => { const b = meshBox(g); return new THREE.Box3(V(g.position.x - 0.3, b.min.y, g.position.z - 0.3), V(g.position.x + 0.3, b.max.y, g.position.z + 0.3)); };
+  // ствол (userData.trunk: фонари и пальмы улицы) — столб на всю высоту: крона и рука фонаря — над головой, ни с чем не сталкиваются
+  const tbox = g => { const b = meshBox(g), t = g.userData.trunk, q = g.getWorldPosition(V()); return new THREE.Box3(V(q.x - t, b.min.y, q.z - t), V(q.x + t, b.max.y, q.z + t)); };
+  const boxes = new Map([...objects, ...decors].map(g => [g, g.userData.trunk ? tbox(g) : meshBox(g)]).concat(people.map(g => [g, pbox(g)])));
+  for (let i = 0; i < furn.length; i++) for (let j = i + 1; j < furn.length; j++) {
+    const v = inter(boxes.get(furn[i]), boxes.get(furn[j])); if (v > 0.001) out.push(`мебель: ${nameOf(furn[i])} × ${nameOf(furn[j])} — ${Math.round(v * 1000)} л`);
+  }
+  const rest = objects.filter(g => REST.has(g.userData.word));
+  for (let i = 0; i < rest.length; i++) for (let j = i + 1; j < rest.length; j++)
+    if (inter(boxes.get(rest[i]), boxes.get(rest[j])) > 0) out.push(`вещи: ${nameOf(rest[i])} × ${nameOf(rest[j])}`);
+  for (const [g, b] of boxes) { if (g.userData.outside) continue; const R = ROOMS[roomOf(g)], IX = R.w / 2 - 0.045, IZ = R.d / 2 - 0.045;
+    if (!WALLS.has(g.userData.word) && (b.max.x > R.cx + IX || b.min.x < R.cx - IX || b.max.z > R.cz + IZ || b.min.z < R.cz - IZ)) out.push(`в стене: ${nameOf(g)}`); }
+  // перед дверцами и ящиками — свободно на ширину створки (10.11: холодильник открывался в столешницу, шкаф — в растение)
+  const FRONT = { psygeio: [0, 1, 0.6], ntoylapa: [1, 0, 0.55], 'стойка': [0, 1, 0.35], ypologistis: [-1, 0, 0.35], tileorasi: [-1, 0, 0.3],
+    fournos: [0, 1, 0.5], nerochytis: [0, 1, 0.35], ntoulapi: [0, 1, 0.35], 'холодильник кухни': [0, 1, 0.6],
+    komodino: [0, 1, 0.3], 'тумбочка Йоргоса': [0, 1, 0.3], 'комод': [-1, 0, 0.4] };
+  for (const [g, b] of boxes) {
+    const f = FRONT[nameOf(g)]; if (!f) continue;
+    const [dx, dz, dep] = f, cl = b.clone();
+    if (dx > 0) { cl.min.x = b.max.x + 0.01; cl.max.x = b.max.x + dep; } if (dx < 0) { cl.max.x = b.min.x - 0.01; cl.min.x = b.min.x - dep; }
+    if (dz > 0) { cl.min.z = b.max.z + 0.01; cl.max.z = b.max.z + dep; } if (dz < 0) { cl.max.z = b.min.z - 0.01; cl.min.z = b.min.z - dep; }
+    cl.min.y = Math.max(cl.min.y, 0.05);
+    for (const [o, ob] of boxes) if (o !== g && people.indexOf(o) < 0 && !WALLS.has(o.userData.word) && inter(cl, ob) > 0) out.push(`дверцы не открыть: ${nameOf(g)} — мешает ${nameOf(o)}`);
+  }
+  for (const g of rest) {   // вещь стоит на поверхности: под серединой дна опора в пределах 1 см
+    const b = boxes.get(g), others = [...objects, ...decors, ...floors].filter(o => o !== g).flatMap(solid);
+    // опора — самая высокая под пятью точками дна (кастрюля стоит на решётке плиты, а не на дне между прутьями)
+    const ix = (b.max.x - b.min.x) * 0.35, iz = (b.max.z - b.min.z) * 0.35, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2; let top = null;
+    for (const [ox, oz] of [[0, 0], [ix, iz], [-ix, iz], [ix, -iz], [-ix, -iz]]) {
+      rc.set(V(cx + ox, b.min.y + 0.05, cz + oz), V(0, -1, 0)); rc.far = 2; const h = rc.intersectObjects(others, false)[0];
+      if (h && (top === null || h.point.y > top)) top = h.point.y;
+    }
+    const gap = top === null ? null : b.min.y - top;
+    if (gap === null || gap > 0.012 || gap < -0.012) out.push(`висит/утонула: ${nameOf(g)} (${gap === null ? 'нет опоры' : Math.round(gap * 100) + ' см'})`);
+  }
+  return out;
+}
+// ---------- сквозь мебель не пройти (11.11: с джойстиком игрок проходил сквозь стол и диван) ----------
+// Препятствие — прямоугольник модели на полу (ниже 0,5 м начинается и выше 0,35 м), без мелких вещей, настенного, плоского и задника;
+// у деревьев — только ствол (крона над головой). Игрока (радиус 0,22 м) выталкивает по кратчайшей оси — вдоль края скользишь.
+let obst = [], stuck = 0;
+const TRUNK = { dentro: 0.25, foinikas: 0.25 };
+function buildObst() {
+  obst = [];
+  const add = g => {
+    const n = nameOf(g), t = TRUNK[n] || g.userData.trunk;
+    if (t) { const p = g.getWorldPosition(V()); obst.push({ room: roomOf(g), n, x0: p.x - t, x1: p.x + t, z0: p.z - t, z1: p.z + t }); return; }
+    const b = meshBox(g); if (b.isEmpty() || b.min.y > 0.5 || b.max.y < 0.35) return;
+    obst.push({ room: roomOf(g), n, x0: b.min.x, x1: b.max.x, z0: b.min.z, z1: b.max.z });
+  };
+  for (const g of objects) if (!REST.has(g.userData.word) && !WALLS.has(g.userData.word) && !g.userData.flat) add(g);
+  for (const g of decors) if (!g.userData.flat && !g.userData.outside) add(g);
+}
+// путь в обход (11.11): касание вещи за кроватью или столом — идём вокруг, а не упираемся. Сетка 0,2 м по комнате, мебель с запасом 0,26 м,
+// люди — круг 0,7 м; поиск в ширину (8 соседей, углы не срезаем), потом спрямление: точка пути пропускается, если до следующей видно напрямую.
+// Цель в мебели или за ней недостижима — идём в ближайшую к ней достижимую клетку (подход сработает оттуда).
+const way = [];   // оставшиеся точки пути; текущая — player.tx/tz
+const PAD = 0.26;
+function blockedAt(x, z) {
+  for (const o of obst) if (o.room === room && x > o.x0 - PAD && x < o.x1 + PAD && z > o.z0 - PAD && z < o.z1 + PAD) return true;
+  for (const g of people) if (roomOf(g) === room && Math.hypot(x - g.position.x, z - g.position.z) < 0.7) return true;   // мимо людей — с запасом, не впритирку
+  return false;
+}
+function clearLine(ax, az, bx, bz, skip) {   // skip — начало пути у самой мебели: первые 0,3 м не проверяем
+  const d = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(d / 0.08));
+  for (let i = 1; i <= n; i++) { const k = i / n; if (skip && d * k < 0.3) continue; if (blockedAt(ax + (bx - ax) * k, az + (bz - az) * k)) return false; }
+  return true;
+}
+function route(x0, z0, x1, z1, D) {   // D — встать в ~D от точки (вещь, человек): по прямой, если видно, иначе первая по пути клетка кольца D−0,3…D+0,25
+  if (D) { const d = Math.hypot(x0 - x1, z0 - z1) || 1, ax = clampX(x1 + (x0 - x1) / d * D), az = clampZ(z1 + (z0 - z1) / d * D);
+    if (!blockedAt(ax, az) && clearLine(x0, z0, ax, az, true)) return [{ x: ax, z: az }]; }
+  else if (clearLine(x0, z0, x1, z1, true)) return [{ x: x1, z: z1 }];
+  const R = ROOMS[room], C = 0.2, sw = R.w - 0.9, sd = R.d - 0.9, W = Math.round(sw / C) + 1, H = Math.round(sd / C) + 1, ox = R.cx - sw / 2, oz = R.cz - sd / 2;
+  const cx = i => ox + i * C, cz = j => oz + j * C, at = (x, z) => Math.max(0, Math.min(H - 1, Math.round((z - oz) / C))) * W + Math.max(0, Math.min(W - 1, Math.round((x - ox) / C)));
+  const free = new Uint8Array(W * H);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) free[j * W + i] = Math.hypot(cx(i) - x0, cz(j) - z0) < 0.3 || !blockedAt(cx(i), cz(j)) ? 1 : 0;   // у старта — свободно (стоим вплотную к мебели)
+  const s = at(x0, z0), prev = new Int32Array(W * H).fill(-2), q = [s]; prev[s] = -1;
+  let best = s, bd = Math.hypot(x0 - x1, z0 - z1), ring = -1;
+  for (let h = 0; h < q.length; h++) {
+    const k = q[h], i = k % W, j = (k - i) / W, d = Math.hypot(cx(i) - x1, cz(j) - z1); if (d < bd) { bd = d; best = k; }
+    if (D && d >= D - 0.3 && d <= D + 0.25) { ring = k; break; }   // поиск в ширину: первая такая клетка — ближайшая по пути
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const a = i + di, b = j + dj; if (a < 0 || b < 0 || a >= W || b >= H) continue; const n = b * W + a;
+      if (!free[n] || prev[n] !== -2 || (di && dj && !(free[j * W + a] && free[b * W + i]))) continue;
+      prev[n] = k; q.push(n);
+    }
+  }
+  if (ring >= 0) best = ring;
+  const pts = []; for (let k = best; k !== -1; k = prev[k]) pts.unshift({ x: cx(k % W), z: cz(Math.floor(k / W)) });
+  if (!D && best === at(x1, z1) && free[best]) pts[pts.length - 1] = { x: x1, z: z1 };   // цель свободна — в саму точку, не в центр клетки
+  const out = []; let a = { x: x0, z: z0 }, i = 0;
+  while (i < pts.length - 1) { let j = pts.length - 1; while (j > i + 1 && !clearLine(a.x, a.z, pts[j].x, pts[j].z, !out.length)) j--; out.push(pts[j]); a = pts[j]; i = j; }
+  return out.length ? out : [pts[pts.length - 1]];
+}
+function walkTo(x, z, D) { const r = route(player.x, player.z, x, z, D); way.length = 0; way.push(...r.slice(1)); player.tx = r[0].x; player.tz = r[0].z; stuck = 0; }
+function collide() {
+  const r = 0.22;
+  for (const o of obst) {
+    if (o.room !== room || player.x <= o.x0 - r || player.x >= o.x1 + r || player.z <= o.z0 - r || player.z >= o.z1 + r) continue;
+    const l = player.x - o.x0 + r, rt = o.x1 + r - player.x, u = player.z - o.z0 + r, dn = o.z1 + r - player.z, m = Math.min(l, rt, u, dn);
+    if (m === l) player.x = o.x0 - r; else if (m === rt) player.x = o.x1 + r; else if (m === u) player.z = o.z0 - r; else player.z = o.z1 + r;
+  }
+  [player.x, player.z] = confine(player.x, player.z);
+}
+const layoutReady = Promise.allSettled(kitJobs).then(() => {
+  let moved = 0; for (const g of objects) if (REST.has(g.userData.word)) moved += settle(g);
+  buildObst(); cull(true); for (const g of objects) delete g.userData.abox;   // рамки площадей — по загруженным моделям
+  return { moved: Math.round(moved * 100) / 100, issues: layoutCheck(), obst: obst.length };
+});
+
+window.__palace = { WORDS, PEOPLE, setMode, openWord: id => openWord(byId[id]), player, recalled, FINE, aimAt: () => keyOf(pick(innerWidth / 2, innerHeight / 2)), act: () => act(pick(innerWidth / 2, innerHeight / 2)),
+  kit: () => layoutReady.then(r => Object.assign({ jobs: kitJobs.length, chars: Object.keys(chars) }, r)), charAnim: id => chars[id] && chars[id].cur.getClip().name,
+  layoutCheck, boxes: () => Object.fromEntries([...objects, ...decors, ...people].map(g => { const b = meshBox(g); return [nameOf(g), [b.min, b.max].map(v => [v.x, v.y, v.z].map(n => Math.round(n * 100) / 100))]; })), REC, tick: ms => { recNow += ms; for (let i = recTimers.length - 1; i >= 0; i--) if (recTimers[i].at <= recNow) { const t = recTimers.splice(i, 1)[0]; t.fn(); } frame(recNow); },
+  room: () => room, goRoom, played, tapAt: (x, y) => act(pick(x, y), true),
+  screenAt: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight, front: v.z < 1 }; },   // запись видео: точка мира → экран
+  recNow: () => recNow, hitAt: (x, y) => keyOf(pick(x, y)),
+  stats: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geo: renderer.info.memory.geometries, tex: renderer.info.memory.textures, heap: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) : null }),   // замер: вызовы отрисовки, треугольники, память
+  // дым джойстика: экранная точка вещи (середина модели; у человека — грудь) и что под ней на самом деле; состояние джойстика и подхода
+  screenOf: key => { const g = key.startsWith('p:') ? people.find(x => 'p:' + x.userData.person === key) : objById[key]; if (!g) return null;
+    const b = meshBox(g), c = b.getCenter(new THREE.Vector3()); if (key.startsWith('p:')) c.y = b.max.y - 0.45; c.project(camera);
+    const x = (c.x + 1) / 2 * innerWidth, y = (1 - c.y) / 2 * innerHeight; return { x, y, hit: keyOf(pick(x, y)) }; },
+  joy: () => ({ id: JOY.id, vx: JOY.vx, vy: JOY.vy, look: lookId, pend: !!pend, zone: joyZoneX(), way: way.length + (player.tx !== null ? 1 : 0) }),
+  route: (x, z) => route(player.x, player.z, x, z),
+  visible: id => objById[id].visible,
+  quest: { state: () => Q, take: id => qClick({ o: objById[id] }), give: () => qClick({ o: npcG(sNpc()) }), giveTo: id => qClick({ o: npcG(id) }), steps: () => QC.steps, cfg: () => QC, cfgOf: r => QUESTS[r],
+    streetW: (x, z) => SW_(x, z), streetG: () => [SXW + SX, SZW],
+    goAt: id => qClick({ o: objById[id], arrived: true }), tap: id => qClick({ o: objById[id] }), reach: id => reachOf(objById[id]), petros: () => { const g = petrosG(); return g && { x: g.position.x, z: g.position.z, moving: !!g.userData.moving, anim: chars.petros && chars.petros.wk }; },
+    petrosTo: (x, z, ry) => { const g = petrosG(); g.position.set(x, 0, z); if (ry !== undefined) g.rotation.y = ry; trail.length = 0; } } };
+</script>
+</body>
+</html>
